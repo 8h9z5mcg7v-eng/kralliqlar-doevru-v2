@@ -206,6 +206,32 @@ buildDefenseTower(8,-13,'Şərq müdafiə qülləsi');
 buildDefenseTower(-8,13,'Cənub-qərb müdafiə qülləsi');
 buildDefenseTower(8,13,'Cənub-şərq müdafiə qülləsi');
 
+// Training yard: visible infantry squad, practice dummies and weapon racks
+const trainingYard=new THREE.Group();
+trainingYard.userData={name:'Əsgər hazırlıq meydanı',kind:'trainingYard'};
+box(trainingYard,0,.025,0,6.4,.12,5.2,mat(0x88734d));
+for(const z of [-2.55,2.55])for(let x=-3;x<=3;x+=.75)box(trainingYard,x,.48,z,.12,.9,.12,wood);
+for(const x of [-3.15,3.15])for(let z=-2.4;z<=2.4;z+=.8)box(trainingYard,x,.48,z,.12,.9,.12,wood);
+for(let i=0;i<3;i++){
+ const dummy=new THREE.Group();
+ cylinder(dummy,0,0,0,.13,.16,1.5,wood,7);
+ box(dummy,0,1.02,0,.9,.13,.13,wood);
+ const shield=new THREE.Mesh(new THREE.CircleGeometry(.34,8),mat(0x8c3930));shield.position.set(.25,.9,.12);dummy.add(shield);
+ dummy.position.set(-2+i*2,0,-1.25);trainingYard.add(dummy);
+}
+function trainingSoldier(x,z,variant){
+ const man=new THREE.Group();
+ const tunic=variant===0?mat(0x9a4938):variant===1?mat(0x405a70):mat(0x857044);
+ cylinder(man,0,.72,0,.22,.27,.85,tunic,7);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.19,10,8),gold);head.position.y=1.28;man.add(head);
+ const helmet=new THREE.Mesh(new THREE.ConeGeometry(.22,.28,6),darkStone);helmet.position.y=1.46;man.add(helmet);
+ box(man,.3,.82,0,.48,.12,.12,wood);
+ const spear=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.55,6),iron);spear.position.set(.48,1.3,0);man.add(spear);
+ const shield=new THREE.Mesh(new THREE.CircleGeometry(.3,8),mat(variant===1?0x344f67:0x9a4938));shield.position.set(-.3,.78,.16);man.add(shield);
+ man.position.set(x,0,z);trainingYard.add(man);
+}
+trainingSoldier(-1.8,0,0);trainingSoldier(0,.25,1);trainingSoldier(1.8,0,2);
+trainingYard.position.set(-8,0,0);scene.add(trainingYard);
 // camera drag / zoom
 let down=false,px=0,py=0,rot=0,tilt=0,cameraDistance=39,dragged=false;renderer.domElement.addEventListener('pointerdown',e=>{down=true;dragged=false;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;rot+=dx*.006;tilt=Math.max(-.25,Math.min(.35,tilt+dy*.003));px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{cameraDistance=Math.max(20,Math.min(58,cameraDistance*(e.deltaY>0?1.07:.93)))});
 const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();renderer.domElement.addEventListener('click',e=>{if(dragged)return;mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(scene.children,true);let obj=null;for(const hit of hits){let node=hit.object;while(node&&node!==scene){if(node.userData?.name){obj=node;break}node=node.parent}if(obj)break;}if(!obj){let p=hits[0]?.point;if(p&&p.distanceTo(new THREE.Vector3(0,0,0))<5)obj={userData:{name:'Baş Qala',kind:'castle'}}}if(obj)showPanel(obj.userData.name,obj.userData.kind)});
