@@ -66,6 +66,48 @@ g.position.set(x,0,z);g.userData={name,kind};scene.add(g);return g}
 const buildings=[
 house(-5,-4,'Kazarma','barracks'),house(5,-4,'Atçılıq tövləsi','stable'),house(-5,4,'Oxçular meydanı','archery'),house(5,4,'Anbar','store'),house(-13,-3,'Dəmirçi','forge'),house(13,3,'Bazar','market'),house(-14,4,'Taxtaçı','lumber'),house(14,-4,'Təsərrüfat','farm'),house(-3,-13,'Şura binası','hall'),house(4,13,'Məbəd','temple')
 ];
+// Architectural detailing pass: timber frames, windows, signs and distinct roof features
+for(const b of buildings){
+ const {kind,name}=b.userData;
+ const frame=mat(0x3d3025), plaster=mat(kind==='barracks'?0xaaa99a:0xc4ad83), glass=mat(0x263d49,.35);
+ // Front door and paired windows
+ box(b,0,.12,1.29,.62,1.32,.12,frame);
+ box(b,0,.18,1.36,.42,1.05,.04,wood);
+ for(const x of [-.82,.82]){
+   box(b,x,1.05,1.29,.38,.55,.1,frame);
+   box(b,x,1.08,1.35,.25,.4,.035,glass);
+   box(b,x,1.08,1.38,.045,.48,.025,gold);
+   box(b,x,1.08,1.38,.3,.04,.025,gold);
+ }
+ // Stone footings and timber cross-beams make silhouettes less block-like
+ box(b,0,.12,0,2.85,.22,2.62,darkStone);
+ box(b,0,1.85,1.27,2.8,.12,.12,frame);
+ if(kind==='barracks'||kind==='hall'){
+   for(let x=-1.05;x<=1.05;x+=.7)box(b,x,2.28,0,.12,.32,.12,gold);
+ }
+ if(kind==='stable'){
+   // Open stable bays and hay bundles
+   for(const x of [-.72,0,.72]){
+     box(b,x,.78,1.32,.12,1.45,.12,frame);
+     const hay=new THREE.Mesh(new THREE.ConeGeometry(.38,.48,6),mat(0xb49a50));
+     hay.position.set(x,.5,-.9);hay.rotation.z=Math.PI/2;hay.castShadow=true;b.add(hay);
+   }
+   box(b,0,1.98,0,1.9,.12,.12,frame);
+ }else{
+   // Ridge beam, roof-end trim and chimney
+   box(b,0,3.05,0,.16,.18,2.5,frame);
+   box(b,-1.2,2.45,0,.12,.2,2.2,frame);
+   box(b,1.2,2.45,0,.12,.2,2.2,frame);
+   if(['forge','hall','temple'].includes(kind)){
+     box(b,.86,2.25,-.65,.38,1.1,.42,stone);
+     box(b,.86,2.82,-.65,.5,.12,.54,darkStone);
+   }
+ }
+ // Small hanging signboards uniquely identify the building
+ const sign=new THREE.Mesh(new THREE.BoxGeometry(1.05,.34,.1),mat(kind==='market'?0x8c6337:0x4b493d));
+ sign.position.set(1.42,1.75,1.34);sign.castShadow=true;b.add(sign);
+ for(const x of [1.05,1.78])cylinder(b,x,1.45,1.34,.035,.04,.62,frame,5);
+}
 // farm plots and water well
 for(let i=0;i<4;i++){box(scene,11+i*.8,-.02,-11, .55,.12,2.7,mat(i%2?0x8d9a50:0xb39a5c))}
 cylinder(scene,-13,0,0,.8,.8,.35,stone,8);cylinder(scene,-13,.35,0,.5,.5,.2,water,12);box(scene,-13,1.1,0,.12,1.4,.12,wood);
