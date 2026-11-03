@@ -220,7 +220,49 @@ function collectResources(){
  document.querySelector('#modalText').textContent='Resurs anbarına əlavə edildi: 250 taxta, 160 daş, 80 dəmir və 35 qızıl.';
 }
 document.querySelector('#close').onclick=()=>document.querySelector('#modal').classList.remove('show');
-document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.bottom button').forEach(x=>x.classList.remove('active'));if(b.closest('.bottom'))b.classList.add('active');const p=b.dataset.panel;const labels={city:['Şəhər','Şəhər görünüşü aktivdir.'],army:['Ordu','Qoşun idarəetmə bölməsi növbəti mərhələdə genişləndiriləcək.'],world:['Dünya xəritəsi','Dünya xəritəsi növbəti mərhələdə əlavə olunacaq.'],alliance:['İttifaq','İttifaq sistemi növbəti mərhələdə əlavə olunacaq.'],hero:['Qəhrəman','Qəhrəmanların idarəetmə bölməsi hazırlanır.'],quests:['Tapşırıqlar','Gündəlik tapşırıqlar və mükafatlar.'],mail:['Məktublar','Krallıq xəbərləri və bildirişlər.'],events:['Hadisələr','Mövsümi tədbirlər və turnirlər.']};showPanel(labels[p][0],p);document.querySelector('#modalText').textContent=labels[p][1]});
+function addAction(label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=fn;document.querySelector('#modalActions').appendChild(b)}
+function trainArmy(type){
+ const costs={infantry:{wood:45,food:65},archers:{wood:75,food:55},cavalry:{wood:90,food:110,iron:25}};
+ const counts={infantry:game.infantry||0,archers:game.archers||0,cavalry:game.cavalry||0};
+ const c=costs[type],enough=Object.entries(c).every(([k,v])=>(game[k]||0)>=v);
+ if(!enough){document.querySelector('#modalText').textContent='Təlim üçün resurslar kifayət etmir.';return}
+ Object.entries(c).forEach(([k,v])=>game[k]-=v);game[type]=counts[type]+10;game.troops=(game.infantry||0)+(game.archers||0)+(game.cavalry||0);save();paintResources();
+ document.querySelector('#modalText').textContent='10 yeni '+({infantry:'piyada',archers:'oxatan',cavalry:'süvari'}[type])+' döyüşçü hazırlandı. Ümumi qoşun: '+game.troops+'.';
+}
+function renderMode(p){
+ const a=document.querySelector('#modalActions');a.innerHTML='';
+ if(p==='army'){
+   game.infantry??=60;game.archers??=40;game.cavalry??=20;game.troops=game.infantry+game.archers+game.cavalry;
+   document.querySelector('#modalText').textContent='Qoşunların: '+game.infantry+' piyada · '+game.archers+' oxatan · '+game.cavalry+' süvari. Təlim üçün resurs sərf olunur.';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">Cəmi '+game.troops+' döyüşçü</span><span class="tag">Təlim düşərgəsi</span>';
+   addAction('🗡️ +10 Piyada',()=>trainArmy('infantry'));addAction('🏹 +10 Oxatan',()=>trainArmy('archers'));addAction('🐎 +10 Süvari',()=>trainArmy('cavalry'));
+ }else if(p==='world'){
+   document.querySelector('#modalText').textContent='Ətraf əraziləri kəşf et. Hər kəşfiyyat 100 ərzaq sərf edir və təsadüfi resurs tapır.';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">Kəşfiyyat xəritəsi</span><span class="tag">Sərhəd əraziləri</span>';
+   addAction('🔭 Kəşfiyyata göndər',()=>{
+     if(game.food<100){document.querySelector('#modalText').textContent='Kəşfiyyat üçün 100 ərzaq lazımdır.';return}
+     game.food-=100;const loot=120+Math.floor(Math.random()*180);const key=['wood','stone','iron','gold'][Math.floor(Math.random()*4)];game[key]+=loot;game.scouts=(game.scouts||0)+1;save();paintResources();
+     document.querySelector('#modalText').textContent='Kəşfiyyat uğurlu oldu! '+loot+' '+({wood:'taxta',stone:'daş',iron:'dəmir',gold:'qızıl'}[key])+' tapıldı.';
+   });
+   addAction('⚔️ Quldur düşərgəsinə hücum',()=>{
+     const power=(game.infantry||60)+(game.archers||40)*1.2+(game.cavalry||20)*1.5;
+     if(power<180){document.querySelector('#modalText').textContent='Hücum üçün ən azı 180 döyüş gücü lazımdır.';return}
+     game.food=Math.max(0,game.food-80);game.gold+=140;game.xp=(game.xp||0)+25;save();paintResources();
+     document.querySelector('#modalText').textContent='Qələbə! Quldur düşərgəsindən 140 qızıl və 25 təcrübə qazandın.';
+   });
+ }else if(p==='hero'){
+   document.querySelector('#modalText').textContent='Sənin ilk qəhrəmanın: Qartal sərkərdəsi. Təcrübə: '+(game.xp||0)+'. Kəşfiyyat və döyüşlər qəhrəman təcrübəsi qazandırır.';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">Qəhrəman · Səviyyə 1</span><span class="tag">Hücum +5%</span>';
+ }else if(p==='alliance'){
+   document.querySelector('#modalText').textContent='İttifaq sistemi hələ təkoyunçu prototipidir. Yerli sınaq ittifaqına qoşula bilərsən.';
+   addAction('🛡️ Sınaq ittifaqına qoşul',()=>{game.alliance='Qartal Birliyi';save();document.querySelector('#modalText').textContent='Qartal Birliyinə qoşuldun!';document.querySelector('#modalTags').innerHTML='<span class="tag">Qartal Birliyi</span>'});
+ }else if(p==='quests'){
+   document.querySelector('#modalText').textContent='Gündəlik tapşırıq: 1 dəfə resurs topla, 1 bina inkişaf etdir və 1 dəstə qoşun hazırla.';
+   addAction('🎁 Gündəlik mükafatı al',()=>{if(game.questClaimed){document.querySelector('#modalText').textContent='Bu günün mükafatı artıq götürülüb.';return}game.questClaimed=true;game.gold+=100;game.food+=150;save();paintResources();document.querySelector('#modalText').textContent='Mükafat: 100 qızıl və 150 ərzaq!'});
+ }
+ save();
+}
+document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.bottom button').forEach(x=>x.classList.remove('active'));if(b.closest('.bottom'))b.classList.add('active');const p=b.dataset.panel;const labels={city:'Şəhər',army:'Ordu',world:'Dünya xəritəsi',alliance:'İttifaq',hero:'Qəhrəman',quests:'Tapşırıqlar',mail:'Məktublar',events:'Hadisələr'};showPanel(labels[p]||'Krallıq',p);renderMode(p)});
 function animate(){requestAnimationFrame(animate);camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
