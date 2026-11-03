@@ -404,7 +404,8 @@ function renderMode(p){
      if(game.food<100){document.querySelector('#targetInfo').textContent='Yürüş üçün 100 ərzaq lazımdır.';return}
      const marchPaths={forest:'M260 155 Q190 120 100 112',camp:'M260 155 Q325 95 390 105',mine:'M260 155 Q350 80 445 55',lake:'M260 155 Q165 210 90 245',ruins:'M260 155 Q300 215 330 255',fort:'M260 155 Q395 210 485 250'};
      game.food-=100;save();paintResources();
-     animateCityMarch(target);\n     const svg=document.querySelector('#realmMap'),info=document.querySelector('#targetInfo');
+     animateCityMarch(target);
+     const svg=document.querySelector('#realmMap'),info=document.querySelector('#targetInfo');
      const oldMarker=svg.querySelector('#marchToken');if(oldMarker)oldMarker.remove();
      const token=document.createElementNS('http://www.w3.org/2000/svg','g');token.setAttribute('id','marchToken');token.innerHTML='<circle r="12" fill="#e5bd68" stroke="#392b1d" stroke-width="3"/><text text-anchor="middle" y="5" font-size="14">⚔</text><animateMotion dur="5s" fill="freeze" path="'+marchPaths[target]+'"/>';svg.appendChild(token);
      const rewards={forest:['wood',260],camp:['gold',180],mine:['iron',210],lake:['food',280],ruins:['gold',240],fort:['stone',190]};const [key,value]=rewards[target];
