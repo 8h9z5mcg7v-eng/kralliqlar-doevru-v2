@@ -258,7 +258,7 @@ function renderMode(p){
     <g data-target="mine" style="cursor:pointer"><circle cx="445" cy="55" r="18" fill="#59676a" stroke="#e8d19a" stroke-width="3"/><text x="445" y="61" text-anchor="middle" font-size="18">⛏</text></g>
     <g data-target="lake" style="cursor:pointer"><circle cx="90" cy="245" r="18" fill="#315e75" stroke="#e8d19a" stroke-width="3"/><text x="90" y="251" text-anchor="middle" font-size="18">🌊</text></g>
     <g data-target="ruins" style="cursor:pointer"><circle cx="330" cy="255" r="18" fill="#71634d" stroke="#e8d19a" stroke-width="3"/><text x="330" y="261" text-anchor="middle" font-size="18">🏚</text></g>
-    <g data-target="fort" style="cursor:pointer"><circle cx="485" cy="250" r="18" fill="#696e70" stroke="#e8d19a" stroke-width="3"/><text x="485" y="256" text-anchor="middle" font-size="18">🏰</text></g>
+    <g data-target="fort" style="cursor:pointer"><circle cx="485" cy="250" r="18" fill="#696e70" stroke="#e8d19a" stroke-width="3"/><text x="485" y="256" text-anchor="middle" font-size="18">🏰</text></g><g data-target="rival" style="cursor:pointer"><circle cx="350" cy="72" r="20" fill="#842f2a" stroke="#f0c17b" stroke-width="3"/><text x="350" y="79" text-anchor="middle" font-size="20">♜</text></g>
    </svg>
    <div style="display:flex;justify-content:space-between;font-size:10px;color:#d9c99f;margin:5px 1px"><span>● Kəşf edilən ərazilər</span><span>Yol: şimal ticarət yolu</span></div>
    <p id="targetInfo" style="font-size:11px">Xəritədə nişanlardan birini seç.</p>`;
@@ -268,13 +268,26 @@ function renderMode(p){
      target=btn.dataset.target;
      document.querySelectorAll('#realmMap [data-target] circle').forEach(c=>c.setAttribute('stroke','#e8d19a'));
      btn.querySelector('circle').setAttribute('stroke','#fff');
-     document.querySelector('#targetInfo').textContent=({forest:'Qədim meşə · 260 taxta mükafatı.',camp:'Quldur düşərgəsi · 180 qızıl mükafatı.',mine:'Dəmir mədəni · 210 dəmir mükafatı.',lake:'Sakit göl · 280 ərzaq mükafatı.',ruins:'Qədim xarabalıq · 240 qızıl mükafatı.',fort:'Şimal qalası · 190 daş mükafatı.'})[target];
+     document.querySelector('#targetInfo').textContent=({forest:'Qədim meşə · 260 taxta mükafatı.',camp:'Quldur düşərgəsi · 180 qızıl mükafatı.',mine:'Dəmir mədəni · 210 dəmir mükafatı.',lake:'Sakit göl · 280 ərzaq mükafatı.',ruins:'Qədim xarabalıq · 240 qızıl mükafatı.',fort:'Şimal qalası · 190 daş mükafatı.',rival:'Qara Qartal krallığı · rəqib hökmdar, müdafiə gücü 160.'})[target];
    }));
    addAction('🧭 Kəşfiyyat / yürüş',()=>{
      if(!target){document.querySelector('#targetInfo').textContent='Əvvəlcə xəritədə ərazi seç.';return}
+     if(target==='rival'){document.querySelector('#targetInfo').textContent='Qara Qartal krallığı: 160 müdafiə gücü. Hücum üçün ayrıca döyüş əmri ver.';return}
      if(game.food<100){document.querySelector('#targetInfo').textContent='Yürüş üçün 100 ərzaq lazımdır.';return}
      game.food-=100;const rewards={forest:['wood',260],camp:['gold',180],mine:['iron',210],lake:['food',280],ruins:['gold',240],fort:['stone',190]};const [key,value]=rewards[target];game[key]=(game[key]||0)+value;game.xp=(game.xp||0)+10;game.lastMarch=target;save();paintResources();
      document.querySelector('#targetInfo').textContent='Yürüş uğurlu oldu! +'+value+' '+({wood:'taxta',stone:'daş',iron:'dəmir',gold:'qızıl',food:'ərzaq'}[key])+', +10 təcrübə.';
+   });
+   addAction('⚔️ Qara Qartala hücum',()=>{
+     if(!target||target!=='rival'){document.querySelector('#targetInfo').textContent='Əvvəlcə qırmızı Qara Qartal nişanını seç.';return}
+     const power=(game.infantry||0)+(game.archers||0)*1.2+(game.cavalry||0)*1.5;
+     if(power<160){document.querySelector('#targetInfo').textContent='Qoşun gücün 160-dan azdır. Əvvəlcə ordu hazırla.';return}
+     if(game.food<250){document.querySelector('#targetInfo').textContent='Hücum üçün 250 ərzaq lazımdır.';return}
+     game.food-=250;
+     const defense=160+(game.rivalWins||0)*35;
+     const roll=power*(.85+Math.random()*.3);
+     if(roll>=defense){game.gold+=350;game.wood+=220;game.xp=(game.xp||0)+60;game.rivalWins=(game.rivalWins||0)+1;document.querySelector('#targetInfo').textContent='QƏLƏBƏ! Qara Qartalın müdafiəsi yarıldı. +350 qızıl, +220 taxta, +60 təcrübə.'}
+     else{game.infantry=Math.max(0,game.infantry-Math.ceil(game.infantry*.08));game.archers=Math.max(0,game.archers-Math.ceil(game.archers*.06));game.cavalry=Math.max(0,game.cavalry-Math.ceil(game.cavalry*.1));game.xp=(game.xp||0)+12;document.querySelector('#targetInfo').textContent='MƏĞLUBİYYƏT. Qoşunların itki verdi. Qəhrəman +12 təcrübə qazandı.'}
+     game.troops=game.infantry+game.archers+game.cavalry;save();paintResources();
    });
  }else if(p==='hero'){
    document.querySelector('#modalText').textContent='Sənin ilk qəhrəmanın: Qartal sərkərdəsi. Təcrübə: '+(game.xp||0)+'. Kəşfiyyat və döyüşlər qəhrəman təcrübəsi qazandırır.';
