@@ -286,6 +286,88 @@ buildDefenseTower(8,-13,'Şərq müdafiə qülləsi');
 buildDefenseTower(-8,13,'Cənub-qərb müdafiə qülləsi');
 buildDefenseTower(8,13,'Cənub-şərq müdafiə qülləsi');
 
+
+// ===== REBUILT KINGDOM CITY: dense isometric medieval stronghold =====
+// The former prototype scene is retained in code for its game systems, but hidden;
+// this coherent architectural set is the active city view.
+for(const child of [...scene.children]){if(!child.isLight)child.visible=false;}
+const city=new THREE.Group();scene.add(city);
+const C=(hex,rough=.88)=>new THREE.MeshStandardMaterial({color:hex,roughness:rough});
+const mStone=C(0x8e8a7d),mStoneLit=C(0xb0a894),mStoneDark=C(0x514f49),mMortar=C(0x6c6a61),mWood=C(0x573922),mBeam=C(0x38271d),mRoof=C(0x713e32),mRoof2=C(0x354e59),mRoofGold=C(0x9a7140),mPlaster=C(0xc4b18d),mPlaster2=C(0x9f9b83),mGrass=C(0x536b43),mPath=C(0xb8a17b),mPathEdge=C(0x75664e),mIron=C(0x303a3a),mGold=C(0xc49a4c),mWater=C(0x3d7780,.28);
+function slab(parent,x,y,z,w,h,d,material){const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);q.position.set(x,y+h/2,z);q.castShadow=true;q.receiveShadow=true;parent.add(q);return q}
+function peak(parent,x,y,z,r,h,material,sides=4){const q=new THREE.Mesh(new THREE.ConeGeometry(r,h,sides),material);q.position.set(x,y+h/2,z);q.rotation.y=Math.PI/4;q.castShadow=true;parent.add(q);return q}
+function post(parent,x,y,z,r,h,material){const q=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,8),material);q.position.set(x,y+h/2,z);q.castShadow=true;parent.add(q);return q}
+function roofGable(parent,w,d,y,material){const a=slab(parent,0,y+.48,0,w*1.12,.16,d*1.18,material);a.rotation.z=-.48;const b=slab(parent,0,y+.48,0,w*1.12,.16,d*1.18,material);b.rotation.z=.48;slab(parent,0,y+.93,0,.16,.16,d*1.2,mBeam)}
+function cityBuilding(x,z,label,kind,scale=1,accent=mRoof){
+ const g=new THREE.Group(),w=(kind==='hall'?4.1:kind==='stable'?3.7:3.05)*scale,d=(kind==='hall'?3.5:3)*scale,h=(kind==='hall'?2.8:2.25)*scale;
+ slab(g,0,0,0,w+.38,.38,d+.38,mStoneDark);slab(g,0,.34,0,w,.2,d,mStoneLit);
+ slab(g,0,.54,0,w,h,d,kind==='barracks'?mStone:mPlaster);
+ // timber framing and masonry corner quoins
+ for(const xx of [-w/2+.12,w/2-.12]){slab(g,xx,.55,0,.16,h,d+.06,mBeam);slab(g,xx,.55,d/2+.04,.18,h,.12,mBeam)}
+ slab(g,0,.72,d/2+.075,w-.18,.14,.14,mBeam);slab(g,0,h+.42,d/2+.075,w-.18,.14,.14,mBeam);
+ // front doorway, iron straps and warm window glass
+ slab(g,0,.55,d/2+.11,.72,1.45,.13,mBeam);slab(g,0,.62,d/2+.19,.52,1.2,.035,mWood);
+ for(const xx of [-w*.29,w*.29]){
+   slab(g,xx,1.18,d/2+.13,.48,.62,.12,mBeam);slab(g,xx,1.21,d/2+.205,.32,.42,.035,C(0x42545a,.32));
+   slab(g,xx,1.21,d/2+.23,.045,.48,.025,mGold);slab(g,xx,1.21,d/2+.23,.36,.045,.025,mGold);
+ }
+ if(kind==='stable'){
+   for(const xx of [-.95,0,.95]){slab(g,xx,.55,d/2+.13,.13,1.6,.14,mBeam);slab(g,xx,.55,d/2+.23,.7,.1,.1,mGold)}
+   slab(g,0,2.18,0,w+.25,.18,d+.25,accent);
+ }else{
+   roofGable(g,w,d,h+.52,accent);
+   // roof dormers and ridge caps
+   for(const xx of [-w*.27,w*.27]){slab(g,xx,h+.98,0,.52,.58,.75,accent);peak(g,xx,h+1.25,0,.43,.55,mRoof2)}
+ }
+ // chimney, battens and guild sign
+ if(['forge','hall','temple'].includes(kind)){slab(g,w*.3,h+.75,-d*.22,.48,1.2,.48,mStoneDark);slab(g,w*.3,h+1.38,-d*.22,.58,.16,.58,mStone)}
+ slab(g,w*.32,1.55,d/2+.18,.82,.36,.12,kind==='market'?mGold:mWood);
+ for(let k=0;k<3;k++)slab(g,w*.32-.23+k*.23,1.56,d/2+.255,.035,.22,.025,mGold);
+ g.position.set(x,0,z);g.userData={name:label,kind};city.add(g);return g;
+}
+// broad raised terrain, grass terraces and cobbled lanes
+slab(city,0,-1.05,0,43,.9,37,mStoneDark);slab(city,0,-.58,0,42,.22,36,mGrass);
+slab(city,0,-.43,0,5,.08,32,mPath);slab(city,0,-.42,0,39,.08,4.2,mPath);
+slab(city,0,-.37,0,9,.12,8,mPathEdge);slab(city,0,-.29,0,8.4,.1,7.4,mPath);
+// perimeter walls, gatehouse and eight crenellated towers
+function cityWall(x,z,w,d){slab(city,x,0,z,w,3.05,d,mStone);slab(city,x,3.02,z,w+.12,.28,d+.12,mStoneDark);const n=Math.floor((w+d)*.42);for(let j=0;j<n;j++){const t=j/(n-1);if(w>d){slab(city,x-w/2+t*w,3.28,z,.48,.55,d+.18,mStoneLit);slab(city,x-w/2+t*w,3.28,z,.48,.55,d+.18,mStoneLit)}else slab(city,x,3.28,z-d/2+t*d,w+.18,.55,.48,mStoneLit)}}
+cityWall(0,-16.1,37,.9);cityWall(0,16.1,37,.9);cityWall(-18.1,0,.9,31.5);cityWall(18.1,0,.9,31.5);
+function cityTower(x,z,idx){const g=new THREE.Group();post(g,0,0,0,1.12,3.8,mStone);post(g,0,3.6,0,1.25,.28,mStoneDark);peak(g,0,3.85,0,1.48,2.15,idx%2?mRoof2:mRoof,8);for(let k=0;k<8;k++){const a=k*Math.PI/4;slab(g,Math.cos(a)*.98,3.9,Math.sin(a)*.98,.28,.5,.28,mStoneLit)}g.position.set(x,0,z);g.userData={name:'Müdafiə qülləsi '+idx,kind:'defenseTower'};city.add(g);defenseTowers.push(g)}
+[[-18,-16],[0,-16],[18,-16],[-18,0],[18,0],[-18,16],[0,16],[18,16]].forEach((p,i)=>cityTower(p[0],p[1],i+1));
+// grand gate with portcullis and twin roofed towers
+const gate=new THREE.Group();slab(gate,-2.15,0,0,1.25,4.5,1.65,mStone);slab(gate,2.15,0,0,1.25,4.5,1.65,mStone);slab(gate,0,3.7,0,5.5,1.15,2,mStoneLit);slab(gate,0,4.7,0,5.7,.28,2.2,mStoneDark);slab(gate,0,.1,.88,1.65,2.9,.16,mBeam);for(let k=-3;k<=3;k++)slab(gate,k*.22,.15,1,.07,2.8,.08,mIron);gate.position.set(0,0,16);gate.userData={name:'Kral darvazası',kind:'gate'};city.add(gate);
+for(const x of [-2.15,2.15]){post(gate,x,4.7,0,.62,1.5,mStone);peak(gate,x,6.1,0,.82,1.3,mRoof2,8)}
+// monumental central keep: layered curtain wall, four towers, banners and inner courtyard
+const keep=new THREE.Group();slab(keep,0,0,0,8.2,1.05,7.2,mStoneDark);slab(keep,0,1,0,7.6,3.7,6.6,mStoneLit);
+for(const x of [-3.15,3.15])for(const z of [-2.65,2.65]){post(keep,x,1,z,.86,5.1,mStone);slab(keep,x,5.9,z,1.9,.35,1.9,mStoneDark);peak(keep,x,6.15,z,1.12,2.1,mRoof2,8);for(let k=0;k<4;k++)slab(keep,x- .62+k*.4,5.95,z, .18,.48,.18,mStoneLit)}
+slab(keep,0,4.65,0,4.2,3.2,3.8,mStone);slab(keep,0,7.8,0,4.6,.35,4.2,mStoneDark);peak(keep,0,8.05,0,2.75,2.9,mRoof,4);
+slab(keep,0,1.05,3.36,1.6,2.5,.2,mWood);slab(keep,0,3.65,3.5,2,.18,.2,mGold);
+for(const x of [-.45,.45]){slab(keep,x,5.7,1.95,.28,.9,.12,mGold)}
+keep.position.set(0,-.35,-.1);keep.userData={name:'Baş Qala',kind:'castle'};city.add(keep);
+// distinct service buildings in clear plots, arranged around the keep
+const newBuildings=[
+ cityBuilding(-8,-8,'Kazarma','barracks',1.05,mRoof),
+ cityBuilding(8,-8,'Atçılıq tövləsi','stable',1.08,mRoof2),
+ cityBuilding(-8,7,'Oxçular qülləsi','archery',1,mRoof2),
+ cityBuilding(8,7,'Böyük anbar','store',1,mRoof),
+ cityBuilding(-13,-3,'Dəmirçi emalatxanası','forge',.92,mRoof),
+ cityBuilding(13,3,'Ticarət bazarı','market',.98,mRoof2),
+ cityBuilding(-13,5,'Taxtaçılar gildiyası','lumber',.9,mRoof),
+ cityBuilding(13,-5,'Ərzaq təsərrüfatı','farm',.9,mRoof),
+ cityBuilding(-3,-12,'Hökmdar şurası','hall',.95,mRoof2),
+ cityBuilding(4,12,'Məbəd','temple',.9,mRoof)
+];
+for(const b of newBuildings)buildings.push(b);
+// training yard, archery targets, smithy forge, market canopy and granary silos
+for(const x of [-8,8]){for(let j=0;j<3;j++)slab(city,x-1+j,0,x===-8?-5: -5,.18,1.3,.18,mWood)}
+for(let k=0;k<3;k++){const target=new THREE.Group();post(target,0,0,0,.06,1.8,mWood);const disc=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.12,16),C(0xeee0bb));disc.rotation.x=Math.PI/2;disc.position.set(0,1.35,.08);target.add(disc);post(target,0,1.2,.16,.06,.12,mRoof);target.position.set(-10+k*1.8,0,9);city.add(target)}
+for(const x of [11.4,13.1]){post(city,x,0,-7,.58,2.5,mStone);peak(city,x,2.45,-7,.68,.9,mRoof2,8)}
+// courtyards, fences, crop rows and small garden plots, no building overlap
+for(const [x,z] of [[-12,-10],[11,10]]){slab(city,x,0,z,4,.12,3,mPathEdge);for(let r=0;r<4;r++)for(let c=0;c<7;c++){const crop=new THREE.Mesh(new THREE.ConeGeometry(.12,.62,5),C(r%2?0x81904c:0x9b9a4d));crop.position.set(x-1.5+c*.48,.38,z-1+r*.62);crop.castShadow=true;city.add(crop)}}
+function cityTree(x,z,s=1){post(city,x,0,z,.18*s,1.25*s,mWood);for(let j=0;j<3;j++){const crown=new THREE.Mesh(new THREE.IcosahedronGeometry((.85-j*.13)*s,1),C(j===1?0x48633c:0x38563a));crown.position.set(x,.95*s+j*.52*s,z);crown.castShadow=true;city.add(crown)}}
+for(const p of [[-15,-11],[-15,-8],[-15,9],[-12,12],[15,-11],[15,10],[11,13],[-5,13],[5,-13]])cityTree(p[0],p[1],.8);
+for(let i=0;i<14;i++){const x=-15+(i%7)*5,z=i<7?-18:18;const b=slab(city,x,-.1,z,.25,.6,.25,mWood);b.rotation.z=.2}
+
 // camera drag / zoom
 let down=false,px=0,py=0,rot=0,tilt=0,cameraDistance=39,dragged=false;renderer.domElement.addEventListener('pointerdown',e=>{down=true;dragged=false;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;rot+=dx*.006;tilt=Math.max(-.25,Math.min(.35,tilt+dy*.003));px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{cameraDistance=Math.max(20,Math.min(58,cameraDistance*(e.deltaY>0?1.07:.93)))});
 const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();renderer.domElement.addEventListener('click',e=>{if(dragged)return;mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(scene.children,true);let obj=null;for(const hit of hits){let node=hit.object;while(node&&node!==scene){if(node.userData?.name){obj=node;break}node=node.parent}if(obj)break;}if(!obj){let p=hits[0]?.point;if(p&&p.distanceTo(new THREE.Vector3(0,0,0))<5)obj={userData:{name:'Baş Qala',kind:'castle'}}}if(obj)showPanel(obj.userData.name,obj.userData.kind)});
