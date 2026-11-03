@@ -291,8 +291,8 @@ buildDefenseTower(8,13,'Cənub-şərq müdafiə qülləsi');
 {
 try {
 // ===== REBUILT KINGDOM CITY: dense isometric medieval stronghold =====
-// The former prototype scene is retained in code for its game systems, but hidden;
-// this coherent architectural set is the active city view.
+// The former prototype scene is retained for its game systems; hide only its original objects after the new scene builds.
+const originalCityChildren=[...scene.children];
 const city=new THREE.Group();scene.add(city);
 const C=(hex,rough=.88)=>new THREE.MeshStandardMaterial({color:hex,roughness:rough});
 const mStone=C(0x8e8a7d),mStoneLit=C(0xb0a894),mStoneDark=C(0x514f49),mMortar=C(0x6c6a61),mWood=C(0x573922),mBeam=C(0x38271d),mRoof=C(0x713e32),mRoof2=C(0x354e59),mRoofGold=C(0x9a7140),mPlaster=C(0xc4b18d),mPlaster2=C(0x9f9b83),mGrass=C(0x536b43),mPath=C(0xb8a17b),mPathEdge=C(0x75664e),mIron=C(0x303a3a),mGold=C(0xc49a4c),mWater=C(0x3d7780,.28);
@@ -370,7 +370,7 @@ function cityTree(x,z,s=1){post(city,x,0,z,.18*s,1.25*s,mWood);for(let j=0;j<3;j
 for(const p of [[-15,-11],[-15,-8],[-15,9],[-12,12],[15,-11],[15,10],[11,13],[-5,13],[5,-13]])cityTree(p[0],p[1],.8);
 for(let i=0;i<14;i++){const x=-15+(i%7)*5,z=i<7?-18:18;const b=slab(city,x,-.1,z,.25,.6,.25,mWood);b.rotation.z=.2}
 
-for(const child of [...scene.children]){if(!child.isLight)child.visible=false;}
+for(const child of originalCityChildren){if(!child.isLight)child.visible=false;}
 } catch(cityBuildError) { console.error('City rebuild failed; keeping original city visible:',cityBuildError); const diagnostic=document.createElement('div'); diagnostic.textContent='Şəhər yenilənmə xətası: '+(cityBuildError?.message||cityBuildError); diagnostic.style.cssText='position:fixed;left:12px;right:12px;bottom:84px;z-index:99999;background:#5b211d;color:#fff;padding:12px;border:1px solid #e4a27b;border-radius:8px;font:13px sans-serif'; document.body.appendChild(diagnostic); }
 }
 // camera drag / zoom
