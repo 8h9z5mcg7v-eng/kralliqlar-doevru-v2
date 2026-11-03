@@ -183,7 +183,7 @@ for(let i=0;i<25;i++){const x=(Math.random()-.5)*35,z=(Math.random()-.5)*29;if(M
 let down=false,px=0,py=0,rot=0,tilt=0,cameraDistance=39,dragged=false;renderer.domElement.addEventListener('pointerdown',e=>{down=true;dragged=false;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;rot+=dx*.006;tilt=Math.max(-.25,Math.min(.35,tilt+dy*.003));px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{cameraDistance=Math.max(20,Math.min(58,cameraDistance*(e.deltaY>0?1.07:.93)))});
 const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();renderer.domElement.addEventListener('click',e=>{if(dragged)return;mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(scene.children,true);let obj=null;for(const hit of hits){let node=hit.object;while(node&&node!==scene){if(node.userData?.name){obj=node;break}node=node.parent}if(obj)break;}if(!obj){let p=hits[0]?.point;if(p&&p.distanceTo(new THREE.Vector3(0,0,0))<5)obj={userData:{name:'Baş Qala',kind:'castle'}}}if(obj)showPanel(obj.userData.name,obj.userData.kind)});
 const SAVE='kd-city-save-v1';
-const game={wood:12500,stone:8200,iron:4600,gold:2100,levels:{}};
+const game={wood:12500,stone:8200,iron:4600,gold:2100,food:3200,levels:{},infantry:60,archers:40,cavalry:20};
 try{Object.assign(game,JSON.parse(localStorage.getItem(SAVE)||'{}'));}catch(e){}
 function save(){try{localStorage.setItem(SAVE,JSON.stringify(game));}catch(e){}}
 function paintResources(){for(const k of ['wood','stone','iron','gold'])document.getElementById(k).textContent=game[k].toLocaleString('az-AZ')}
@@ -237,18 +237,15 @@ function renderMode(p){
    document.querySelector('#modalTags').innerHTML='<span class="tag">Cəmi '+game.troops+' döyüşçü</span><span class="tag">Təlim düşərgəsi</span>';
    addAction('🗡️ +10 Piyada',()=>trainArmy('infantry'));addAction('🏹 +10 Oxatan',()=>trainArmy('archers'));addAction('🐎 +10 Süvari',()=>trainArmy('cavalry'));
  }else if(p==='world'){
-   document.querySelector('#modalText').textContent='Ətraf əraziləri kəşf et. Hər kəşfiyyat 100 ərzaq sərf edir və təsadüfi resurs tapır.';
-   document.querySelector('#modalTags').innerHTML='<span class="tag">Kəşfiyyat xəritəsi</span><span class="tag">Sərhəd əraziləri</span>';
-   addAction('🔭 Kəşfiyyata göndər',()=>{
-     if(game.food<100){document.querySelector('#modalText').textContent='Kəşfiyyat üçün 100 ərzaq lazımdır.';return}
-     game.food-=100;const loot=120+Math.floor(Math.random()*180);const key=['wood','stone','iron','gold'][Math.floor(Math.random()*4)];game[key]+=loot;game.scouts=(game.scouts||0)+1;save();paintResources();
-     document.querySelector('#modalText').textContent='Kəşfiyyat uğurlu oldu! '+loot+' '+({wood:'taxta',stone:'daş',iron:'dəmir',gold:'qızıl'}[key])+' tapıldı.';
-   });
-   addAction('⚔️ Quldur düşərgəsinə hücum',()=>{
-     const power=(game.infantry||60)+(game.archers||40)*1.2+(game.cavalry||20)*1.5;
-     if(power<180){document.querySelector('#modalText').textContent='Hücum üçün ən azı 180 döyüş gücü lazımdır.';return}
-     game.food=Math.max(0,game.food-80);game.gold+=140;game.xp=(game.xp||0)+25;save();paintResources();
-     document.querySelector('#modalText').textContent='Qələbə! Quldur düşərgəsindən 140 qızıl və 25 təcrübə qazandın.';
+   document.querySelector('#modalText').innerHTML='<div style="font-size:11px;margin-bottom:8px">SƏRHƏD ƏRAZİLƏRİ · Hədəf seç və yürüşə başla</div><div id="worldGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:linear-gradient(135deg,#43583c,#263b34);padding:9px;border:1px solid #8b794f;border-radius:8px"><button data-target="forest">🌲<br>Qədim meşə</button><button data-target="camp">⚔️<br>Quldur düşərgəsi</button><button data-target="mine">⛏️<br>Dəmir mədəni</button><button data-target="lake">🌊<br>Sakit göl</button><button data-target="ruins">🏚️<br>Qədim xarabalıq</button><button data-target="fort">🏰<br>Şimal qalası</button></div><p id="targetInfo" style="font-size:11px">Ərazi seçilməyib.</p>';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">6 kəşf edilən məkan</span><span class="tag">Yürüş xəritəsi</span>';
+   let target=null;
+   document.querySelectorAll('[data-target]').forEach(btn=>btn.onclick=()=>{target=btn.dataset.target;document.querySelectorAll('[data-target]').forEach(x=>x.style.outline=x===btn?'2px solid #e5c47e':'none');document.querySelector('#targetInfo').textContent=({forest:'Meşə: taxta ehtiyatları tapıla bilər.',camp:'Quldur düşərgəsi: döyüş və qızıl mükafatı.',mine:'Mədən: dəmir ehtiyatları.',lake:'Göl: ərzaq və su ehtiyatı.',ruins:'Xarabalıq: qədim xəzinə axtarışı.',fort:'Şimal qalası: güclü rəqib müdafiəsi.'})[target]});
+   addAction('🧭 Kəşfiyyat / yürüş',()=>{
+     if(!target){document.querySelector('#targetInfo').textContent='Əvvəlcə xəritədən hədəf seç.';return}
+     if(game.food<100){document.querySelector('#targetInfo').textContent='Yürüş üçün 100 ərzaq lazımdır.';return}
+     game.food-=100;const rewards={forest:['wood',260],camp:['gold',180],mine:['iron',210],lake:['food',280],ruins:['gold',240],fort:['stone',190]};const [key,value]=rewards[target];game[key]=(game[key]||0)+value;game.xp=(game.xp||0)+10;game.lastMarch=target;save();paintResources();
+     document.querySelector('#targetInfo').textContent='Yürüş uğurlu oldu! '+value+' '+({wood:'taxta',stone:'daş',iron:'dəmir',gold:'qızıl',food:'ərzaq'}[key])+' əldə etdin. +10 təcrübə.';
    });
  }else if(p==='hero'){
    document.querySelector('#modalText').textContent='Sənin ilk qəhrəmanın: Qartal sərkərdəsi. Təcrübə: '+(game.xp||0)+'. Kəşfiyyat və döyüşlər qəhrəman təcrübəsi qazandırır.';
