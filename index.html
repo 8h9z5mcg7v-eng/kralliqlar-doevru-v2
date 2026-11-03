@@ -52,6 +52,29 @@ function tower(x,z){cylinder(scene,x,0,z,1.05,1.2,3.4,stone,8);cone(scene,x,3.35
 tower(-16,-14);tower(16,-14);tower(-16,14);tower(16,14);
 // Gate
 box(scene,0,0,14,3.1,3.3,1.2,darkStone);box(scene,0,0,14.05,1.6,2.7,1.25,wood);cone(scene,0,3.1,14,1.7,1.4,roofBlue,4);
+// Main gatehouse upgrade: layered stone arch, portcullis, guard balconies and torches
+const gatehouse=new THREE.Group();
+gatehouse.userData={name:'Krallığın əsas darvazası',kind:'gate'};
+box(gatehouse,-2.15,0,0,1.05,4.6,1.8,darkStone);
+box(gatehouse,2.15,0,0,1.05,4.6,1.8,darkStone);
+box(gatehouse,0,3.55,0,5.25,1.15,2.05,stone);
+box(gatehouse,0,4.45,0,5.6,.32,2.3,darkStone);
+for(let x=-2.55;x<=2.55;x+=.85){
+ box(gatehouse,x,4.78,0,.34,.55,2.35,stone);
+}
+for(let x=-.72;x<=.72;x+=.24){
+ box(gatehouse,x,.08,.98,.075,2.85,.12,wood);
+}
+box(gatehouse,0,2.82,1.02,1.85,.18,.18,gold);
+for(const x of [-2.15,2.15]){
+ box(gatehouse,x,2.15,1.05,.85,.18,.65,wood);
+ box(gatehouse,x,2.65,1.05,.85,.12,.65,wood);
+ for(let j=-1;j<=1;j++)box(gatehouse,x+j*.28,2.38,1.05,.09,.42,.09,darkStone);
+ cylinder(gatehouse,x,2.1,1.5,.12,.12,.72,wood,6);
+ const flame=new THREE.Mesh(new THREE.SphereGeometry(.17,8,8),new THREE.MeshStandardMaterial({color:0xffa33b,emissive:0xd45a13,emissiveIntensity:1.4}));
+ flame.position.set(x,2.58,1.5);gatehouse.add(flame);
+}
+gatehouse.position.set(0,0,14.05);scene.add(gatehouse);
 // keep/castle centerpiece
 const castle=new THREE.Group();box(castle,0,0,0,6,4.2,5,stone);box(castle,0,4.2,0,4.8,.45,4,stone);box(castle,0,4.65,0,2.2,2.5,2.2,stone);
 for(const [x,z] of [[-2.5,-2],[2.5,-2],[-2.5,2],[2.5,2]]){cylinder(castle,x,3.1,z,.62,.72,2.1,stone,8);cone(castle,x,5.1,z,.78,1.6,roofBlue,8)}
