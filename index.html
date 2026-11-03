@@ -229,6 +229,11 @@ function trainArmy(type){
  Object.entries(c).forEach(([k,v])=>game[k]-=v);game[type]=counts[type]+10;game.troops=(game.infantry||0)+(game.archers||0)+(game.cavalry||0);save();paintResources();
  document.querySelector('#modalText').textContent='10 yeni '+({infantry:'piyada',archers:'oxatan',cavalry:'süvari'}[type])+' döyüşçü hazırlandı. Ümumi qoşun: '+game.troops+'.';
 }
+function recordBattle(result,enemy,details){
+ game.battleReports=game.battleReports||[];
+ game.battleReports.unshift({date:new Date().toLocaleString('az-AZ'),result,enemy,details});
+ game.battleReports=game.battleReports.slice(0,12);save();
+}
 function renderMode(p){
  const a=document.querySelector('#modalActions');a.innerHTML='';
  if(p==='army'){
@@ -285,10 +290,18 @@ function renderMode(p){
      game.food-=250;
      const defense=160+(game.rivalWins||0)*35;
      const roll=power*(.85+Math.random()*.3);
-     if(roll>=defense){game.gold+=350;game.wood+=220;game.xp=(game.xp||0)+60;game.rivalWins=(game.rivalWins||0)+1;document.querySelector('#targetInfo').textContent='QƏLƏBƏ! Qara Qartalın müdafiəsi yarıldı. +350 qızıl, +220 taxta, +60 təcrübə.'}
-     else{game.infantry=Math.max(0,game.infantry-Math.ceil(game.infantry*.08));game.archers=Math.max(0,game.archers-Math.ceil(game.archers*.06));game.cavalry=Math.max(0,game.cavalry-Math.ceil(game.cavalry*.1));game.xp=(game.xp||0)+12;document.querySelector('#targetInfo').textContent='MƏĞLUBİYYƏT. Qoşunların itki verdi. Qəhrəman +12 təcrübə qazandı.'}
+     if(roll>=defense){game.gold+=350;game.wood+=220;game.xp=(game.xp||0)+60;game.rivalWins=(game.rivalWins||0)+1;document.querySelector('#targetInfo').textContent='QƏLƏBƏ! Qara Qartalın müdafiəsi yarıldı. +350 qızıl, +220 taxta, +60 təcrübə.';recordBattle('Qələbə','Qara Qartal','Müdafiə xətti yarıldı. 350 qızıl və 220 taxta qənimət götürüldü.')}
+     else{game.infantry=Math.max(0,game.infantry-Math.ceil(game.infantry*.08));game.archers=Math.max(0,game.archers-Math.ceil(game.archers*.06));game.cavalry=Math.max(0,game.cavalry-Math.ceil(game.cavalry*.1));game.xp=(game.xp||0)+12;document.querySelector('#targetInfo').textContent='MƏĞLUBİYYƏT. Qoşunların itki verdi. Qəhrəman +12 təcrübə qazandı.';recordBattle('Məğlubiyyət','Qara Qartal','Hücum dəf edildi. Qoşunların itki verdi.')}
      game.troops=game.infantry+game.archers+game.cavalry;save();paintResources();
    });
+ }else if(p==='mail'){
+   const reports=game.battleReports||[];
+   document.querySelector('#modalText').textContent=reports.length?'Son döyüş və yürüş hesabatları:':'Hələ döyüş hesabatı yoxdur. Dünya xəritəsində yürüşə və döyüşə başla.';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">'+reports.length+' hesabat</span><span class="tag">Krallıq poçtu</span>';
+   reports.slice(0,6).forEach(r=>{const line=document.createElement('div');line.style.cssText='border:1px solid #80633d;border-radius:6px;padding:7px;margin:6px 0;font-size:11px';line.innerHTML='<b style="color:'+(r.result==='Qələbə'?'#9ac17b':'#d58a78')+'">'+r.result+' · '+r.enemy+'</b><div style="color:#d8c9a9;margin-top:3px">'+r.details+'</div><small style="color:#a99b7d">'+r.date+'</small>';document.querySelector('#modalActions').appendChild(line)});
+ }else if(p==='events'){
+   document.querySelector('#modalText').textContent='Krallıq hadisələri: gündəlik tapşırıqlar, sərhəd yürüşləri və Qara Qartala qarşı döyüşlər.';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">Sərhəd müharibəsi</span><span class="tag">Gündəlik fəaliyyət</span>';
  }else if(p==='hero'){
    document.querySelector('#modalText').textContent='Sənin ilk qəhrəmanın: Qartal sərkərdəsi. Təcrübə: '+(game.xp||0)+'. Kəşfiyyat və döyüşlər qəhrəman təcrübəsi qazandırır.';
    document.querySelector('#modalTags').innerHTML='<span class="tag">Qəhrəman · Səviyyə 1</span><span class="tag">Hücum +5%</span>';
