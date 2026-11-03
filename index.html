@@ -179,6 +179,22 @@ for(let i=0;i<25;i++){const x=(Math.random()-.5)*35,z=(Math.random()-.5)*29;if(M
  }
 })();
 
+// Interactive defensive towers along the inner wall
+const defenseTowers=[];
+function buildDefenseTower(x,z,label){
+ const g=new THREE.Group();
+ cylinder(g,0,0,0,.72,.9,2.8,stone,8);
+ cylinder(g,0,2.75,0,.98,.98,.22,darkStone,8);
+ for(let k=0;k<4;k++){const a=k*Math.PI/2;box(g,Math.cos(a)*.72,2.9,Math.sin(a)*.72,.22,.65,.22,stone)}
+ cone(g,0,3.45,0,1.08,1.35,roofBlue,8);
+ const banner=new THREE.Mesh(new THREE.PlaneGeometry(.7,.42),new THREE.MeshStandardMaterial({color:0x8b3930,side:THREE.DoubleSide}));banner.position.set(.48,3.45,.05);g.add(banner);
+ g.position.set(x,0,z);g.userData={name:label,kind:'defenseTower'};scene.add(g);defenseTowers.push(g);
+}
+buildDefenseTower(-8,-13,'Qərb müdafiə qülləsi');
+buildDefenseTower(8,-13,'Şərq müdafiə qülləsi');
+buildDefenseTower(-8,13,'Cənub-qərb müdafiə qülləsi');
+buildDefenseTower(8,13,'Cənub-şərq müdafiə qülləsi');
+
 // camera drag / zoom
 let down=false,px=0,py=0,rot=0,tilt=0,cameraDistance=39,dragged=false;renderer.domElement.addEventListener('pointerdown',e=>{down=true;dragged=false;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;rot+=dx*.006;tilt=Math.max(-.25,Math.min(.35,tilt+dy*.003));px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{cameraDistance=Math.max(20,Math.min(58,cameraDistance*(e.deltaY>0?1.07:.93)))});
 const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();renderer.domElement.addEventListener('click',e=>{if(dragged)return;mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(scene.children,true);let obj=null;for(const hit of hits){let node=hit.object;while(node&&node!==scene){if(node.userData?.name){obj=node;break}node=node.parent}if(obj)break;}if(!obj){let p=hits[0]?.point;if(p&&p.distanceTo(new THREE.Vector3(0,0,0))<5)obj={userData:{name:'Baş Qala',kind:'castle'}}}if(obj)showPanel(obj.userData.name,obj.userData.kind)});
@@ -190,12 +206,13 @@ function paintResources(){for(const k of ['wood','stone','iron','gold'])document
 paintResources();
 let selectedBuilding=null;
 function showPanel(name,kind){
- selectedBuilding=(kind==='castle'||['barracks','stable','archery','store','forge','market','farm','hall','lumber','temple'].includes(kind))?{name,kind}:null;
+ selectedBuilding=(kind==='castle'||['barracks','stable','archery','store','forge','market','farm','hall','lumber','temple','defenseTower'].includes(kind))?{name,kind}:null;
  document.querySelector('#modalTitle').textContent=name;
- document.querySelector('#modalText').textContent=({castle:'Krallığın əsas qalası. Səviyyəni artıraraq yeni inkişaf imkanları aç.',barracks:'Piyada qoşunlarının hazırlanması və təlimi.',stable:'Süvari qoşunları üçün atlar və təlim meydanı.',archery:'Oxçu dəstələrinin hazırlanması.',store:'Resurs ehtiyatlarının saxlanması.',forge:'Silah və zirehlərin təkmilləşdirilməsi.',market:'Ticarət və resurs mübadiləsi.',farm:'Ərzaq istehsalı.',hall:'Krallığın idarəetmə mərkəzi.'})[kind]||'Krallıq bölməsi.';
+ document.querySelector('#modalText').textContent=({castle:'Krallığın əsas qalası. Səviyyəni artıraraq yeni inkişaf imkanları aç.',barracks:'Piyada qoşunlarının hazırlanması və təlimi.',stable:'Süvari qoşunları üçün atlar və təlim meydanı.',archery:'Oxçu dəstələrinin hazırlanması.',store:'Resurs ehtiyatlarının saxlanması.',forge:'Silah və zirehlərin təkmilləşdirilməsi.',market:'Ticarət və resurs mübadiləsi.',farm:'Ərzaq istehsalı.',hall:'Krallığın idarəetmə mərkəzi.',defenseTower:'Şəhər divarlarını qoruyan müdafiə qülləsi. Səviyyəsini artıraraq müdafiə gücünü yüksəlt.'})[kind]||'Krallıq bölməsi.';
  const actions=document.querySelector('#modalActions');actions.innerHTML='';
  if(selectedBuilding){
    const level=game.levels[kind]||1;
+   if(kind==='defenseTower')document.querySelector('#modalText').textContent='Müdafiə gücü: '+(120+(level-1)*45)+'. Qülləni inkişaf etdirərək hücumlara qarşı şəhəri möhkəmləndir.';
    document.querySelector('#modalTags').innerHTML='<span class="tag">Səviyyə '+level+'</span><span class="tag">İnkişaf mümkündür</span>';
    const up=document.createElement('button');up.textContent='⬆ İnkişaf etdir';up.onclick=()=>upgradeSelected();actions.appendChild(up);
  }else{document.querySelector('#modalTags').innerHTML='';}
