@@ -193,7 +193,7 @@ function buildDefenseTower(x,z,label){
    box(guard,0,.42,0,.28,.62,.24,side===0?wood:darkStone);
    const head=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),gold);head.position.y=.82;guard.add(head);
    box(guard,.2,.55,0,.07,.55,.07,wood);
-   const spear=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.95,6),iron);spear.position.set(.27,1.05,0);guard.add(spear);
+   const spear=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.95,6),darkStone);spear.position.set(.27,1.05,0);guard.add(spear);
    const pennant=new THREE.Mesh(new THREE.PlaneGeometry(.28,.18),new THREE.MeshStandardMaterial({color:0x9b3c32,side:THREE.DoubleSide}));pennant.position.set(.27,1.42,0);guard.add(pennant);
    guard.position.set(side===0?-.42:.42,3.05,.12);g.add(guard);
  }
