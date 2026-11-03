@@ -254,7 +254,7 @@ function refreshTrainingYard(){
    }
  });
 }
-trainingYard.position.set(-8,0,0);scene.add(trainingYard);refreshTrainingYard();
+trainingYard.position.set(-8,0,0);scene.add(trainingYard);
 function animateCityMarch(destination){
  const squad=new THREE.Group();scene.add(squad);
  const clones=visibleTroops.map((unit,index)=>{
@@ -282,6 +282,7 @@ try{Object.assign(game,JSON.parse(localStorage.getItem(SAVE)||'{}'));}catch(e){}
 function save(){try{localStorage.setItem(SAVE,JSON.stringify(game));}catch(e){}}
 function paintResources(){for(const k of ['wood','stone','iron','gold'])document.getElementById(k).textContent=game[k].toLocaleString('az-AZ')}
 paintResources();
+refreshTrainingYard();
 let selectedBuilding=null;
 function showPanel(name,kind){
  selectedBuilding=(kind==='castle'||['barracks','stable','archery','store','forge','market','farm','hall','lumber','temple','defenseTower'].includes(kind))?{name,kind}:null;
