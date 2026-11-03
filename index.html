@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#111a20">
+<title>Krallıqlar Dövrü</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+:root{--gold:#d9b66b;--gold2:#f4dda0;--ink:#11191e;--panel:#172329eF;--line:#9b7847;--cream:#f1e5c7}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10191d;color:var(--cream);font-family:Inter,system-ui,sans-serif}#scene{position:fixed;inset:0}canvas{display:block}
+.hud{position:fixed;inset:0;pointer-events:none}.top{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.brand{font:800 clamp(16px,2.2vw,25px) Cinzel,serif;color:var(--gold2);text-shadow:0 2px 8px #000;letter-spacing:1px}.resources{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.resource,.player{background:linear-gradient(180deg,#26363bdc,#10191deF);border:1px solid #94784c;border-radius:7px;padding:7px 10px;box-shadow:0 4px 12px #0008;font-size:12px;white-space:nowrap}.resource b{color:#f1d28a;margin-left:5px}.player{position:absolute;top:52px;left:12px;font-size:11px;color:#d7c49d}.side{position:absolute;left:12px;top:105px;display:grid;gap:7px;pointer-events:auto}.side button,.bottom button,.modal button{cursor:pointer;color:#f4e6c5;border:1px solid #9a7849;background:linear-gradient(#35454a,#172329);border-radius:7px;box-shadow:0 3px 10px #0009;font:600 11px Inter;padding:9px 11px}.side button:hover,.bottom button:hover{filter:brightness(1.3)}.bottom{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:7px;pointer-events:auto;padding:8px;background:#10191de8;border:1px solid #8c6c40;border-radius:10px;box-shadow:0 6px 22px #000b;max-width:calc(100vw - 20px)}.bottom button{min-width:68px;padding:10px 8px}.bottom button.active{background:linear-gradient(#88683a,#44321e);color:#fff1c6}.hint{position:absolute;bottom:76px;left:50%;transform:translateX(-50%);font-size:11px;color:#f6e7c5;background:#10191dbb;border:1px solid #80623d;padding:7px 12px;border-radius:20px;white-space:nowrap;text-shadow:0 1px 4px #000}.modal{display:none;position:absolute;right:14px;bottom:78px;width:min(300px,calc(100vw - 28px));pointer-events:auto;background:linear-gradient(160deg,#26363bfa,#10191dfa);border:1px solid #b08a50;border-radius:10px;padding:15px;box-shadow:0 10px 35px #000c}.modal.show{display:block}.modal h2{font:700 17px Cinzel;color:var(--gold2);margin:0 0 8px}.modal p{font-size:12px;line-height:1.55;color:#ddcfb2}.modal .close{float:right;padding:4px 8px}.tag{display:inline-block;border:1px solid #87683d;border-radius:4px;padding:4px 7px;font-size:10px;color:#e7ca8c;margin:3px 3px 3px 0}
+@media(max-width:600px){.brand{font-size:15px}.resource{padding:6px 7px;font-size:10px}.side{top:112px}.side button{padding:8px;font-size:10px}.bottom{gap:4px}.bottom button{min-width:0;padding:9px 8px;font-size:10px}.player{top:48px}.hint{bottom:70px;font-size:10px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+</head>
+<body>
+<div id="scene"></div>
+<div class="hud">
+ <div class="top"><div class="brand">KRALLIQLAR DÖVRÜ</div><div class="resources"><div class="resource">🪵 <b id="wood">12 500</b></div><div class="resource">🪨 <b id="stone">8 200</b></div><div class="resource">⚒️ <b id="iron">4 600</b></div><div class="resource">🪙 <b id="gold">2 100</b></div></div></div>
+ <div class="player">SƏVİYYƏ 1 · Gənc hökmdar</div>
+ <div class="side"><button data-panel="quests">📜 Tapşırıqlar</button><button data-panel="mail">✉️ Məktublar</button><button data-panel="events">🏆 Hadisələr</button></div>
+ <div class="hint" id="hint">Şəhəri fırlatmaq üçün sürüşdür · Binaya toxun</div>
+ <div class="modal" id="modal"><button class="close" id="close">✕</button><h2 id="modalTitle">Qala</h2><p id="modalText">Krallığın mərkəzi.</p><div id="modalTags"></div></div>
+ <nav class="bottom"><button class="active" data-panel="city">🏰 Şəhər</button><button data-panel="army">⚔️ Ordu</button><button data-panel="world">🌍 Dünya</button><button data-panel="alliance">🛡️ İttifaq</button><button data-panel="hero">👑 Qəhrəman</button></nav>
+</div>
+<script type="module">
+import * as THREE from 'three';
+const host=document.querySelector('#scene');
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x9eb3b4);scene.fog=new THREE.Fog(0x9eb3b4,38,90);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,180);camera.position.set(19,22,26);camera.lookAt(0,1,0);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;host.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xe4f0f2,0x586044,2));
+const sun=new THREE.DirectionalLight(0xffe1b0,3.2);sun.position.set(-18,28,14);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;scene.add(sun);
+const mat=(c,r=.9)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
+const grass=mat(0x657a4d),earth=mat(0x8a7653),stone=mat(0x92918a),darkStone=mat(0x565d5a),wood=mat(0x69452b),roof=mat(0x65423a),roofBlue=mat(0x344b55),gold=mat(0xc19a50),water=mat(0x426f78,.25);
+function box(parent,x,y,z,w,h,d,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y+h/2,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function cone(parent,x,y,z,r,h,m,n=4){const o=new THREE.Mesh(new THREE.ConeGeometry(r,h,n),m);o.position.set(x,y+h/2,z);o.castShadow=true;parent.add(o);return o}
+function cylinder(parent,x,y,z,rt,rb,h,m,n=8){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,n),m);o.position.set(x,y+h/2,z);o.castShadow=true;parent.add(o);return o}
+function tree(x,z,s=1){const g=new THREE.Group();cylinder(g,0,0,0,.12,.18,1.1*s,wood,6);cone(g,0,.55*s,0,.8*s,1.5*s,mat(0x35533a),7);cone(g,0,1.25*s,0,.58*s,1.2*s,mat(0x476742),7);g.position.set(x,0,z);scene.add(g)}
+// broad landscaped island
+box(scene,0,-.65,0,40,.8,34,grass);
+const edge=new THREE.Mesh(new THREE.BoxGeometry(42,.7,36),earth);edge.position.y=-1.25;scene.add(edge);
+// roads and plaza
+box(scene,0,-.17,0,5,.12,34,earth);box(scene,0,-.1,0,4.1,.08,34,mat(0xb6a17a));
+box(scene,0,-.12,0,40,.1,4.3,earth);box(scene,0,-.05,0,40,.08,3.5,mat(0xb6a17a));
+box(scene,0,-.02,0,10,.13,9,stone);
+// castle walls and towers
+const wallY=2.7,wallH=3.1;box(scene,0,0,-8,18,wallH,.8,stone);box(scene,0,0,8,18,wallH,.8,stone);box(scene,-9,0,0,.8,wallH,16,stone);box(scene,9,0,0,.8,wallH,16,stone);
+for(let i=-8;i<=8;i+=2){box(scene,i,wallH,-8,.65,.55,.9,stone);box(scene,i,wallH,8,.65,.55,.9,stone);box(scene,-9,wallH,i,.9,.55,.65,stone);box(scene,9,wallH,i,.9,.55,.65,stone)}
+function tower(x,z){cylinder(scene,x,0,z,1.05,1.2,3.4,stone,8);cone(scene,x,3.35,z,1.25,2.3,roofBlue,8);cylinder(scene,x,2.4,z,1.1,1.1,.2,gold,8)}
+tower(-9,-8);tower(9,-8);tower(-9,8);tower(9,8);
+// Gate
+box(scene,0,0,8,3.1,3.3,1.2,darkStone);box(scene,0,0,8.05,1.6,2.7,1.25,wood);cone(scene,0,3.1,8,1.7,1.4,roofBlue,4);
+// keep/castle centerpiece
+const castle=new THREE.Group();box(castle,0,0,0,6,4.2,5,stone);box(castle,0,4.2,0,4.8,.45,4,stone);box(castle,0,4.65,0,2.2,2.5,2.2,stone);
+for(const [x,z] of [[-2.5,-2],[2.5,-2],[-2.5,2],[2.5,2]]){cylinder(castle,x,3.1,z,.62,.72,2.1,stone,8);cone(castle,x,5.1,z,.78,1.6,roofBlue,8)}
+box(castle,0,0,2.55,1.5,2.6,.25,wood);box(castle,0,2.7,0,1.1,.25,1.1,gold);castle.position.set(0,.05,0);scene.add(castle);
+// individual city buildings with separate silhouettes
+function house(x,z,name,kind='house',scale=1){const g=new THREE.Group();const w=kind==='hall'?3.8:2.7,d=kind==='hall'?3.1:2.5,h=kind==='stable'?1.8:2.2;
+box(g,0,0,0,w*scale,h*scale,d*scale,kind==='barracks'?stone:wood);
+if(kind==='stable'){box(g,0,h*scale,0,w*scale*.55,.35*scale,d*scale*1.15,roof);box(g,-.55*scale,.2,1.27*scale,.55*scale,1.1*scale,.15,wood);box(g,.55*scale,.2,1.27*scale,.55*scale,1.1*scale,.15,wood)}
+else {const r=kind==='hall'?roofBlue:roof;const a=cone(g,0,h*scale,0,Math.max(w,d)*.72*scale,1.35*scale,r,4);a.rotation.y=Math.PI/4}
+box(g,0,.1,.0,.7*scale,1.2*scale,.08,gold).position.z=d*scale/2+.04;
+g.position.set(x,0,z);scene.add(g);g.userData={name,kind};return g}
+const buildings=[
+house(-5,-4,'Kazarma','barracks'),house(5,-4,'Atçılıq tövləsi','stable'),house(-5,4,'Oxçular meydanı','archery'),house(5,4,'Anbar','store'),house(-13,-3,'Dəmirçi','forge'),house(13,3,'Bazar','market'),house(-14,4,'Taxtaçı','lumber'),house(14,-4,'Təsərrüfat','farm'),house(-3,-13,'Şura binası','hall'),house(4,13,'Məbəd','temple')
+];
+// farm plots and water well
+for(let i=0;i<4;i++){box(scene,11+i*.8,-.02,-11, .55,.12,2.7,mat(i%2?0x8d9a50:0xb39a5c))}
+cylinder(scene,-13,0,0,.8,.8,.35,stone,8);cylinder(scene,-13,.35,0,.5,.5,.2,water,12);box(scene,-13,1.1,0,.12,1.4,.12,wood);
+for(let i=0;i<30;i++){const a=i*2.399;const r=14+Math.random()*4;tree(Math.cos(a)*r,Math.sin(a)*r,.65+Math.random()*.6)}
+// little rocks
+for(let i=0;i<25;i++){const x=(Math.random()-.5)*35,z=(Math.random()-.5)*29;if(Math.abs(x)<10&&Math.abs(z)<9)continue;const o=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+Math.random()*.35,0),stone);o.position.set(x,.05,z);o.castShadow=true;scene.add(o)}
+// camera drag / zoom
+let down=false,px=0,py=0,rot=0,tilt=0;renderer.domElement.addEventListener('pointerdown',e=>{down=true;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);window.addEventListener('pointermove',e=>{if(!down)return;rot+=(e.clientX-px)*.006;tilt=Math.max(-.25,Math.min(.35,tilt+(e.clientY-py)*.003));px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{camera.position.multiplyScalar(e.deltaY>0?1.07:.93);camera.position.clampLength(16,55)});
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();renderer.domElement.addEventListener('click',e=>{mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(scene.children,true);let obj=hits.map(h=>h.object).find(o=>o.userData?.name);if(!obj){let p=hits[0]?.point;if(p&&p.distanceTo(new THREE.Vector3(0,0,0))<5)obj={userData:{name:'Baş Qala',kind:'castle'}}}if(obj)showPanel(obj.userData.name,obj.userData.kind)});
+function showPanel(name,kind){document.querySelector('#modalTitle').textContent=name;document.querySelector('#modalText').textContent=({castle:'Krallığın əsas qalası. Buradan tikintiləri, müdafiəni və hökmdarlıq səviyyəsini idarə et.',barracks:'Piyada qoşunlarını hazırla və ordunun sayını artır.',stable:'Süvari qoşunları üçün atlar və təlim meydanı.',archery:'Oxçu dəstələrini yetişdir və müdafiəni gücləndir.',store:'Resurs ehtiyatlarını burada saxla.',forge:'Silah və zirehləri təkmilləşdir.',market:'Ticarət və resurs mübadiləsi.',farm:'Ərzaq istehsalı.',hall:'Krallığın idarəetmə mərkəzi.'})[kind]||'Bu bina krallığın inkişafına xidmət edir.';document.querySelector('#modalTags').innerHTML='<span class="tag">Səviyyə 1</span><span class="tag">İnkişaf etdir</span><span class="tag">Məlumat</span>';document.querySelector('#modal').classList.add('show')}
+document.querySelector('#close').onclick=()=>document.querySelector('#modal').classList.remove('show');
+document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.bottom button').forEach(x=>x.classList.remove('active'));if(b.closest('.bottom'))b.classList.add('active');const p=b.dataset.panel;const labels={city:['Şəhər','Şəhər görünüşü aktivdir.'],army:['Ordu','Qoşun idarəetmə bölməsi növbəti mərhələdə genişləndiriləcək.'],world:['Dünya xəritəsi','Dünya xəritəsi növbəti mərhələdə əlavə olunacaq.'],alliance:['İttifaq','İttifaq sistemi növbəti mərhələdə əlavə olunacaq.'],hero:['Qəhrəman','Qəhrəmanların idarəetmə bölməsi hazırlanır.'],quests:['Tapşırıqlar','Gündəlik tapşırıqlar və mükafatlar.'],mail:['Məktublar','Krallıq xəbərləri və bildirişlər.'],events:['Hadisələr','Mövsümi tədbirlər və turnirlər.']};showPanel(labels[p][0],p);document.querySelector('#modalText').textContent=labels[p][1]});
+function animate(){requestAnimationFrame(animate);const t=performance.now()*.00012;camera.position.set(Math.sin(rot)*32,22+tilt*20,Math.cos(rot)*32);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body></html>
