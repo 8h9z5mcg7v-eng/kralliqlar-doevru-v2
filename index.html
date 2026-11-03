@@ -189,11 +189,29 @@ for(let i=0;i<25;i++){const x=(Math.random()-.5)*35,z=(Math.random()-.5)*29;if(M
    crown.position.set(x,.48,z);crown.castShadow=true;crown.receiveShadow=true;scene.add(crown);
  }
  for(const p of [[-12,-8],[-12,-10],[-10,-12],[12,8],[12,10],[10,12],[-8,11],[8,-11]])shrub(p[0],p[1],leafA);
- // Stone well details and wooden cart near the market
- box(scene,9.8,0,-7.5,1.1,.55,.75,wood);
- cylinder(scene,9.25,.2,-7.5,.38,.38,.12,iron,10);
- cylinder(scene,10.35,.2,-7.5,.38,.38,.12,iron,10);
- box(scene,9.8,.8,-7.5,.08,.85,1.05,wood);
+ // Detailed merchant cart, loaded with colourful market goods
+ const marketCart=new THREE.Group();marketCart.position.set(9.8,0,-7.5);scene.add(marketCart);
+ box(marketCart,0,.68,0,1.7,.18,1.05,wood);
+ box(marketCart,0,.88,-.08,1.35,.28,.82,mat(0x805632));
+ for(const x of [-.66,.66]){
+   const wheel=new THREE.Group();wheel.position.set(x,.36,0);
+   const tire=new THREE.Mesh(new THREE.TorusGeometry(.32,.075,8,16),mat(0x302820));wheel.add(tire);
+   const hub=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.18,10),gold);hub.rotation.x=Math.PI/2;wheel.add(hub);
+   for(let k=0;k<8;k++){const spoke=box(wheel,0,0,0,.045,.57,.04,wood);spoke.rotation.z=k*Math.PI/4;}
+   wheel.rotation.y=Math.PI/2;marketCart.add(wheel);
+   marketCart.userData.wheels=marketCart.userData.wheels||[];marketCart.userData.wheels.push(wheel);
+ }
+ for(let j=0;j<5;j++){
+   const sack=new THREE.Mesh(new THREE.SphereGeometry(.17,8,7),mat([0xb28b45,0x8b4938,0x64794a][j%3]));
+   sack.scale.set(1,.72,1);sack.position.set(-.43+j*.21,1.13,.02);marketCart.add(sack);
+ }
+ box(marketCart,-1.08,.65,0,.12,.12,.12,darkStone);
+ box(marketCart,-1.58,.65,0,.9,.09,.09,wood);
+ // Stone-lined market well with visible water
+ cylinder(scene,9.8,0,-10.2,.82,.82,.48,stone,10);
+ cylinder(scene,9.8,.25,-10.2,.56,.56,.12,water,12);
+ box(scene,9.8,.92,-10.2,.1,1.25,.1,wood);
+ box(scene,9.8,1.55,-10.2,1.25,.1,.1,wood);
  // Corner watch platforms reinforce the defensive city silhouette
  for(const p of [[-12,-12],[12,-12],[-12,12],[12,12]]){
    box(scene,p[0],0,p[1],1.35,1.35,1.35,darkStone);
@@ -463,7 +481,7 @@ function addSmoke(x,z,height){
 addSmoke(-12.1,-3.65,3.2);
 addSmoke(-2.1,-13.7,3.3);
 const forgeGlow=new THREE.PointLight(0xff8b38,1.1,6);forgeGlow.position.set(-12.5,1.3,-1.6);scene.add(forgeGlow);
-function animate(){requestAnimationFrame(animate);const t=performance.now()*.001;townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
+function animate(){requestAnimationFrame(animate);const t=performance.now()*.001;marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
 </body></html>
