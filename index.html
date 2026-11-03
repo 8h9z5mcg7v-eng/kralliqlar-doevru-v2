@@ -216,6 +216,14 @@ function showPanel(name,kind){
    document.querySelector('#modalTags').innerHTML='<span class="tag">Səviyyə '+level+'</span><span class="tag">İnkişaf mümkündür</span>';
    const up=document.createElement('button');up.textContent='⬆ İnkişaf etdir';up.onclick=()=>upgradeSelected();actions.appendChild(up);
  }else{document.querySelector('#modalTags').innerHTML='';}
+ if(kind==='defenseTower'){
+   game.towerArchers=game.towerArchers||{};
+   const stationed=game.towerArchers[name]||0;
+   const garrison=document.createElement('div');garrison.style.cssText='font-size:11px;color:#e6d5ad;margin:5px 0';garrison.textContent='Qüllədə yerləşən oxatan: '+stationed;actions.appendChild(garrison);
+   const deploy=document.createElement('button');deploy.textContent='🏹 5 oxatan yerləşdir';deploy.onclick=()=>towerGarrison(name,true);actions.appendChild(deploy);
+   const recall=document.createElement('button');recall.textContent='↩ 5 oxatanı geri çağır';recall.onclick=()=>towerGarrison(name,false);actions.appendChild(recall);
+   const defense=document.createElement('div');defense.style.cssText='font-size:11px;color:#d8c49b;margin-top:6px';defense.textContent='Şəhər müdafiə gücü: '+getCityDefense();actions.appendChild(defense);
+ }
  if(kind==='farm'||kind==='lumber'||kind==='market'||kind==='store'||kind==='castle'){
    const collect=document.createElement('button');collect.textContent='📦 Resursları topla';collect.onclick=collectResources;actions.appendChild(collect);
  }
@@ -231,6 +239,26 @@ function upgradeSelected(){
  game.wood-=cost.wood;game.stone-=cost.stone;game.iron-=cost.iron;game.levels[k]=lv+1;save();paintResources();
  document.querySelector('#modalText').textContent=selectedBuilding.name+' '+(lv+1)+'-ci səviyyəyə yüksəldildi!';
  document.querySelector('#modalTags').innerHTML='<span class="tag">Səviyyə '+(lv+1)+'</span><span class="tag">Yeniləndi</span>';
+}
+function towerGarrison(kind,deploy){
+ game.towerArchers=game.towerArchers||{};
+ const stationed=game.towerArchers[kind]||0;
+ if(deploy){
+   if((game.archers||0)<5){document.querySelector('#modalText').textContent='Qülləyə yerləşdirmək üçün ən azı 5 oxatan lazımdır.';return}
+   game.archers-=5;game.towerArchers[kind]=stationed+5;
+   document.querySelector('#modalText').textContent='5 oxatan qülləyə yerləşdirildi. Qüllədə indi '+game.towerArchers[kind]+' oxatan var.';
+ }else{
+   if(stationed<5){document.querySelector('#modalText').textContent='Qüllədə geri qaytarılacaq 5 oxatan yoxdur.';return}
+   game.archers+=5;game.towerArchers[kind]=stationed-5;
+   document.querySelector('#modalText').textContent='5 oxatan qüllədən geri çağırıldı.';
+ }
+ save();paintResources();
+ document.querySelector('#modalTags').innerHTML='<span class="tag">Qüllə oxatanları: '+game.towerArchers[kind]+'</span><span class="tag">Müdafiə +'+(game.towerArchers[kind]*3)+'</span>';
+}
+function getCityDefense(){
+ const stationed=Object.values(game.towerArchers||{}).reduce((a,b)=>a+b,0);
+ const towerLevel=Object.values(game.levels||{}).reduce((a,b)=>a+b-1,0);
+ return 120+stationed*3+towerLevel*45;
 }
 function collectResources(){
  game.wood+=250;game.stone+=160;game.iron+=80;game.gold+=35;save();paintResources();
@@ -308,12 +336,12 @@ function renderMode(p){
    });
    addAction('⚔️ Qara Qartala hücum',()=>{
      if(!target||target!=='rival'){document.querySelector('#targetInfo').textContent='Əvvəlcə qırmızı Qara Qartal nişanını seç.';return}
-     const power=(game.infantry||0)+(game.archers||0)*1.2+(game.cavalry||0)*1.5;
+     const power=(game.infantry||0)+(game.archers||0)*1.2+(game.cavalry||0)*1.5;const cityDefense=getCityDefense();
      if(power<160){document.querySelector('#targetInfo').textContent='Qoşun gücün 160-dan azdır. Əvvəlcə ordu hazırla.';return}
      if(game.food<250){document.querySelector('#targetInfo').textContent='Hücum üçün 250 ərzaq lazımdır.';return}
      game.food-=250;save();paintResources();
      const info=document.querySelector('#targetInfo');
-     info.innerHTML='<div class="battle-stage"><div class="battle-side">🛡️<b>SƏNİN ORDUN</b><small>'+power+' güc</small></div><div class="battle-clash">⚔️</div><div class="battle-side enemy">🏰<b>QARA QARTAL</b><small>160 müdafiə</small></div></div><div class="battle-progress"><i></i></div><div style="text-align:center;color:#f0d39a">Qoşunlar döyüş meydanına irəliləyir...</div>';
+     info.innerHTML='<div class="battle-stage"><div class="battle-side">🛡️<b>SƏNİN ORDUN</b><small>'+power+' hücum gücü · '+cityDefense+' şəhər müdafiəsi</small></div><div class="battle-clash">⚔️</div><div class="battle-side enemy">🏰<b>QARA QARTAL</b><small>160 müdafiə</small></div></div><div class="battle-progress"><i></i></div><div style="text-align:center;color:#f0d39a">Qoşunlar döyüş meydanına irəliləyir...</div>';
      const defense=160+(game.rivalWins||0)*35;
      const roll=power*(.85+Math.random()*.3);
      const won=roll>=defense;
