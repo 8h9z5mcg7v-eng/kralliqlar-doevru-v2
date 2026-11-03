@@ -24,8 +24,21 @@
  <div class="modal" id="modal"><button class="close" id="close">✕</button><h2 id="modalTitle">Qala</h2><p id="modalText">Krallığın mərkəzi.</p><div id="modalTags"></div><div id="modalActions" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px"></div></div>
  <nav class="bottom"><button class="active" data-panel="city">🏰 Şəhər</button><button data-panel="army">⚔️ Ordu</button><button data-panel="world">🌍 Dünya</button><button data-panel="alliance">🛡️ İttifaq</button><button data-panel="hero">👑 Qəhrəman</button></nav>
 </div>
+<script>
+(function(){
+ function report(msg){
+  let el=document.getElementById('scene-error');
+  if(!el){el=document.createElement('div');el.id='scene-error';el.style.cssText='position:fixed;z-index:100000;left:10px;right:10px;top:90px;padding:12px;background:#5b211d;color:#fff;border:1px solid #e4a27b;border-radius:8px;font:12px/1.4 sans-serif;max-height:35vh;overflow:auto';document.body.appendChild(el);}
+  el.textContent='3D səhnə xətası: '+msg;
+ }
+ window.addEventListener('error',e=>report(e.message||'JavaScript xətası'));
+ window.addEventListener('unhandledrejection',e=>report(e.reason?.message||String(e.reason||'Modul yüklənmədi')));
+})();
+</script>
 <script type="module">
-import * as THREE from 'three';
+let THREE;
+try { THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'); }
+catch(firstError) { THREE=await import('https://unpkg.com/three@0.160.0/build/three.module.js'); }
 const host=document.querySelector('#scene');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9eb3b4);scene.fog=new THREE.Fog(0x9eb3b4,38,90);
 const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,180);camera.position.set(19,22,26);camera.lookAt(0,1,0);
@@ -293,7 +306,7 @@ try {
 // ===== REBUILT KINGDOM CITY: dense isometric medieval stronghold =====
 // The former prototype scene is retained for its game systems; hide only its original objects after the new scene builds.
 const originalCityChildren=[...scene.children];
-const city=new THREE.Group();scene.add(city);
+const city=new THREE.Group();city.visible=true;scene.add(city);
 const C=(hex,rough=.88)=>new THREE.MeshStandardMaterial({color:hex,roughness:rough});
 const mStone=C(0x8e8a7d),mStoneLit=C(0xb0a894),mStoneDark=C(0x514f49),mMortar=C(0x6c6a61),mWood=C(0x573922),mBeam=C(0x38271d),mRoof=C(0x713e32),mRoof2=C(0x354e59),mRoofGold=C(0x9a7140),mPlaster=C(0xc4b18d),mPlaster2=C(0x9f9b83),mGrass=C(0x536b43),mPath=C(0xb8a17b),mPathEdge=C(0x75664e),mIron=C(0x303a3a),mGold=C(0xc49a4c),mWater=C(0x3d7780,.28);
 function slab(parent,x,y,z,w,h,d,material){const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);q.position.set(x,y+h/2,z);q.castShadow=true;q.receiveShadow=true;parent.add(q);return q}
@@ -370,7 +383,7 @@ function cityTree(x,z,s=1){post(city,x,0,z,.18*s,1.25*s,mWood);for(let j=0;j<3;j
 for(const p of [[-15,-11],[-15,-8],[-15,9],[-12,12],[15,-11],[15,10],[11,13],[-5,13],[5,-13]])cityTree(p[0],p[1],.8);
 for(let i=0;i<14;i++){const x=-15+(i%7)*5,z=i<7?-18:18;const b=slab(city,x,-.1,z,.25,.6,.25,mWood);b.rotation.z=.2}
 
-for(const child of originalCityChildren){if(!child.isLight)child.visible=false;}
+for(const child of originalCityChildren){if(!child.isLight)child.visible=false;} city.visible=true; camera.position.set(0,25,34); camera.lookAt(0,1.5,0);
 } catch(cityBuildError) { console.error('City rebuild failed; keeping original city visible:',cityBuildError); const diagnostic=document.createElement('div'); diagnostic.textContent='Şəhər yenilənmə xətası: '+(cityBuildError?.message||cityBuildError); diagnostic.style.cssText='position:fixed;left:12px;right:12px;bottom:84px;z-index:99999;background:#5b211d;color:#fff;padding:12px;border:1px solid #e4a27b;border-radius:8px;font:13px sans-serif'; document.body.appendChild(diagnostic); }
 }
 // camera drag / zoom
