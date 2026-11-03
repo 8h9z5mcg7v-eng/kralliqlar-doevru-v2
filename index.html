@@ -371,7 +371,7 @@ for(const p of [[-15,-11],[-15,-8],[-15,9],[-12,12],[15,-11],[15,10],[11,13],[-5
 for(let i=0;i<14;i++){const x=-15+(i%7)*5,z=i<7?-18:18;const b=slab(city,x,-.1,z,.25,.6,.25,mWood);b.rotation.z=.2}
 
 for(const child of [...scene.children]){if(!child.isLight)child.visible=false;}
-} catch(cityBuildError) { console.error('City rebuild failed; keeping original city visible:',cityBuildError); }
+} catch(cityBuildError) { console.error('City rebuild failed; keeping original city visible:',cityBuildError); const diagnostic=document.createElement('div'); diagnostic.textContent='Şəhər yenilənmə xətası: '+(cityBuildError?.message||cityBuildError); diagnostic.style.cssText='position:fixed;left:12px;right:12px;bottom:84px;z-index:99999;background:#5b211d;color:#fff;padding:12px;border:1px solid #e4a27b;border-radius:8px;font:13px sans-serif'; document.body.appendChild(diagnostic); }
 }
 // camera drag / zoom
 let down=false,px=0,py=0,rot=0,tilt=0,cameraDistance=39,dragged=false;renderer.domElement.addEventListener('pointerdown',e=>{down=true;dragged=false;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;rot+=dx*.006;tilt=Math.max(-.25,Math.min(.35,tilt+dy*.003));px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{cameraDistance=Math.max(20,Math.min(58,cameraDistance*(e.deltaY>0?1.07:.93)))});
