@@ -358,8 +358,27 @@ function renderMode(p){
    document.querySelector('#modalTags').innerHTML='<span class="tag">'+reports.length+' hesabat</span><span class="tag">Krallıq poçtu</span>';
    reports.slice(0,6).forEach(r=>{const line=document.createElement('div');line.style.cssText='border:1px solid #80633d;border-radius:6px;padding:7px;margin:6px 0;font-size:11px';line.innerHTML='<b style="color:'+(r.result==='Qələbə'?'#9ac17b':'#d58a78')+'">'+r.result+' · '+r.enemy+'</b><div style="color:#d8c9a9;margin-top:3px">'+r.details+'</div><small style="color:#a99b7d">'+r.date+'</small>';document.querySelector('#modalActions').appendChild(line)});
  }else if(p==='events'){
-   document.querySelector('#modalText').textContent='Krallıq hadisələri: gündəlik tapşırıqlar, sərhəd yürüşləri və Qara Qartala qarşı döyüşlər.';
-   document.querySelector('#modalTags').innerHTML='<span class="tag">Sərhəd müharibəsi</span><span class="tag">Gündəlik fəaliyyət</span>';
+   game.wallHp??=1000;
+   document.querySelector('#modalText').innerHTML='Krallıq hadisələri və şəhər müdafiəsi.<div style="margin:12px 0 5px;font-size:11px">Divarların möhkəmliyi: <b id="wallHpText">'+game.wallHp+'/1000</b></div><div style="height:10px;background:#332b24;border-radius:8px;overflow:hidden"><div id="wallHpBar" style="height:100%;width:'+game.wallHp/10+'%;background:linear-gradient(90deg,#a94b38,#d7b46c)"></div></div><p style="font-size:10px">Düşmən basqınlarını dəf et və zədələnmiş divarları təmir et.</p>';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">Sərhəd müharibəsi</span><span class="tag">Müdafiə: '+getCityDefense()+'</span>';
+   addAction('🔥 Düşmən basqını başlat',()=>{
+     const defense=getCityDefense(),attack=180+(game.raidsSurvived||0)*25;
+     const damage=Math.max(25,attack-defense*.45);
+     if(defense>=attack){game.gold+=80;game.xp=(game.xp||0)+15;game.raidsSurvived=(game.raidsSurvived||0)+1;document.querySelector('#modalText').innerHTML='🛡️ Basqın dəf edildi! +80 qızıl, +15 təcrübə.<div>Divarların möhkəmliyi: '+game.wallHp+'/1000</div>'}
+     else{game.wallHp=Math.max(0,game.wallHp-Math.round(damage));document.querySelector('#modalText').innerHTML='⚠️ Düşmən divarlara zərər vurdu! <b>'+Math.round(damage)+'</b> möhkəmlik itirildi.<div>Divarların möhkəmliyi: '+game.wallHp+'/1000</div>'}
+     save();paintResources();
+     const bar=document.querySelector('#wallHpBar');if(bar)bar.style.width=game.wallHp/10+'%';
+     const hp=document.querySelector('#wallHpText');if(hp)hp.textContent=game.wallHp+'/1000';
+   });
+   addAction('🧱 Divarları təmir et',()=>{
+     const missing=1000-(game.wallHp||1000);
+     if(missing<=0){document.querySelector('#modalText').textContent='Divarlar tam möhkəmdir.';return}
+     const woodCost=Math.ceil(missing*.35),stoneCost=Math.ceil(missing*.22);
+     if(game.wood<woodCost||game.stone<stoneCost){document.querySelector('#modalText').textContent='Təmir üçün resurs çatmır. Lazımdır: '+woodCost+' taxta və '+stoneCost+' daş.';return}
+     game.wood-=woodCost;game.stone-=stoneCost;game.wallHp=1000;save();paintResources();
+     document.querySelector('#modalText').innerHTML='✅ Divarlar tam təmir edildi!<div>1000/1000 möhkəmlik</div>';
+     const bar=document.querySelector('#wallHpBar');if(bar)bar.style.width='100%';const hp=document.querySelector('#wallHpText');if(hp)hp.textContent='1000/1000';
+   });
  }else if(p==='hero'){
    document.querySelector('#modalText').textContent='Sənin ilk qəhrəmanın: Qartal sərkərdəsi. Təcrübə: '+(game.xp||0)+'. Kəşfiyyat və döyüşlər qəhrəman təcrübəsi qazandırır.';
    document.querySelector('#modalTags').innerHTML='<span class="tag">Qəhrəman · Səviyyə 1</span><span class="tag">Hücum +5%</span>';
