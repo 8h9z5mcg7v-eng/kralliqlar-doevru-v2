@@ -21,7 +21,7 @@
  <div class="player">SƏVİYYƏ 1 · Gənc hökmdar</div>
  <div class="side"><button data-panel="quests">📜 Tapşırıqlar</button><button data-panel="mail">✉️ Məktublar</button><button data-panel="events">🏆 Hadisələr</button></div>
  <div class="hint" id="hint">Şəhəri fırlatmaq üçün sürüşdür · Binaya toxun</div>
- <div class="modal" id="modal"><button class="close" id="close">✕</button><h2 id="modalTitle">Qala</h2><p id="modalText">Krallığın mərkəzi.</p><div id="modalTags"></div></div>
+ <div class="modal" id="modal"><button class="close" id="close">✕</button><h2 id="modalTitle">Qala</h2><p id="modalText">Krallığın mərkəzi.</p><div id="modalTags"></div><div id="modalActions" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px"></div></div>
  <nav class="bottom"><button class="active" data-panel="city">🏰 Şəhər</button><button data-panel="army">⚔️ Ordu</button><button data-panel="world">🌍 Dünya</button><button data-panel="alliance">🛡️ İttifaq</button><button data-panel="hero">👑 Qəhrəman</button></nav>
 </div>
 <script type="module">
@@ -55,7 +55,7 @@ box(scene,0,0,14,3.1,3.3,1.2,darkStone);box(scene,0,0,14.05,1.6,2.7,1.25,wood);c
 // keep/castle centerpiece
 const castle=new THREE.Group();box(castle,0,0,0,6,4.2,5,stone);box(castle,0,4.2,0,4.8,.45,4,stone);box(castle,0,4.65,0,2.2,2.5,2.2,stone);
 for(const [x,z] of [[-2.5,-2],[2.5,-2],[-2.5,2],[2.5,2]]){cylinder(castle,x,3.1,z,.62,.72,2.1,stone,8);cone(castle,x,5.1,z,.78,1.6,roofBlue,8)}
-box(castle,0,0,2.55,1.5,2.6,.25,wood);box(castle,0,2.7,0,1.1,.25,1.1,gold);castle.position.set(0,.05,0);scene.add(castle);
+box(castle,0,0,2.55,1.5,2.6,.25,wood);box(castle,0,2.7,0,1.1,.25,1.1,gold);castle.position.set(0,.05,0);castle.userData={name:'Baş Qala',kind:'castle',level:1};scene.add(castle);
 // individual city buildings with separate silhouettes
 function house(x,z,name,kind='house',scale=1){const g=new THREE.Group();const w=kind==='hall'?3.8:2.7,d=kind==='hall'?3.1:2.5,h=kind==='stable'?1.8:2.2;
 box(g,0,0,0,w*scale,h*scale,d*scale,kind==='barracks'?stone:wood);
@@ -182,7 +182,43 @@ for(let i=0;i<25;i++){const x=(Math.random()-.5)*35,z=(Math.random()-.5)*29;if(M
 // camera drag / zoom
 let down=false,px=0,py=0,rot=0,tilt=0,cameraDistance=39,dragged=false;renderer.domElement.addEventListener('pointerdown',e=>{down=true;dragged=false;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;rot+=dx*.006;tilt=Math.max(-.25,Math.min(.35,tilt+dy*.003));px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{cameraDistance=Math.max(20,Math.min(58,cameraDistance*(e.deltaY>0?1.07:.93)))});
 const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();renderer.domElement.addEventListener('click',e=>{if(dragged)return;mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(scene.children,true);let obj=null;for(const hit of hits){let node=hit.object;while(node&&node!==scene){if(node.userData?.name){obj=node;break}node=node.parent}if(obj)break;}if(!obj){let p=hits[0]?.point;if(p&&p.distanceTo(new THREE.Vector3(0,0,0))<5)obj={userData:{name:'Baş Qala',kind:'castle'}}}if(obj)showPanel(obj.userData.name,obj.userData.kind)});
-function showPanel(name,kind){document.querySelector('#modalTitle').textContent=name;document.querySelector('#modalText').textContent=({castle:'Krallığın əsas qalası. Buradan tikintiləri, müdafiəni və hökmdarlıq səviyyəsini idarə et.',barracks:'Piyada qoşunlarını hazırla və ordunun sayını artır.',stable:'Süvari qoşunları üçün atlar və təlim meydanı.',archery:'Oxçu dəstələrini yetişdir və müdafiəni gücləndir.',store:'Resurs ehtiyatlarını burada saxla.',forge:'Silah və zirehləri təkmilləşdir.',market:'Ticarət və resurs mübadiləsi.',farm:'Ərzaq istehsalı.',hall:'Krallığın idarəetmə mərkəzi.'})[kind]||'Bu bina krallığın inkişafına xidmət edir.';document.querySelector('#modalTags').innerHTML='<span class="tag">Səviyyə 1</span><span class="tag">İnkişaf etdir</span><span class="tag">Məlumat</span>';document.querySelector('#modal').classList.add('show')}
+const SAVE='kd-city-save-v1';
+const game={wood:12500,stone:8200,iron:4600,gold:2100,levels:{}};
+try{Object.assign(game,JSON.parse(localStorage.getItem(SAVE)||'{}'));}catch(e){}
+function save(){try{localStorage.setItem(SAVE,JSON.stringify(game));}catch(e){}}
+function paintResources(){for(const k of ['wood','stone','iron','gold'])document.getElementById(k).textContent=game[k].toLocaleString('az-AZ')}
+paintResources();
+let selectedBuilding=null;
+function showPanel(name,kind){
+ selectedBuilding=(kind==='castle'||['barracks','stable','archery','store','forge','market','farm','hall','lumber','temple'].includes(kind))?{name,kind}:null;
+ document.querySelector('#modalTitle').textContent=name;
+ document.querySelector('#modalText').textContent=({castle:'Krallığın əsas qalası. Səviyyəni artıraraq yeni inkişaf imkanları aç.',barracks:'Piyada qoşunlarının hazırlanması və təlimi.',stable:'Süvari qoşunları üçün atlar və təlim meydanı.',archery:'Oxçu dəstələrinin hazırlanması.',store:'Resurs ehtiyatlarının saxlanması.',forge:'Silah və zirehlərin təkmilləşdirilməsi.',market:'Ticarət və resurs mübadiləsi.',farm:'Ərzaq istehsalı.',hall:'Krallığın idarəetmə mərkəzi.'})[kind]||'Krallıq bölməsi.';
+ const actions=document.querySelector('#modalActions');actions.innerHTML='';
+ if(selectedBuilding){
+   const level=game.levels[kind]||1;
+   document.querySelector('#modalTags').innerHTML='<span class="tag">Səviyyə '+level+'</span><span class="tag">İnkişaf mümkündür</span>';
+   const up=document.createElement('button');up.textContent='⬆ İnkişaf etdir';up.onclick=()=>upgradeSelected();actions.appendChild(up);
+ }else{document.querySelector('#modalTags').innerHTML='';}
+ if(kind==='farm'||kind==='lumber'||kind==='market'||kind==='store'||kind==='castle'){
+   const collect=document.createElement('button');collect.textContent='📦 Resursları topla';collect.onclick=collectResources;actions.appendChild(collect);
+ }
+ document.querySelector('#modal').classList.add('show');
+}
+function upgradeSelected(){
+ if(!selectedBuilding)return;
+ const k=selectedBuilding.kind,lv=game.levels[k]||1;
+ const cost={wood:Math.round(280*lv),stone:Math.round(180*lv),iron:Math.round(70*lv)};
+ if(game.wood<cost.wood||game.stone<cost.stone||game.iron<cost.iron){
+   document.querySelector('#modalText').textContent='Resurslar kifayət etmir. Resurs topladıqdan sonra yenidən cəhd et.';return;
+ }
+ game.wood-=cost.wood;game.stone-=cost.stone;game.iron-=cost.iron;game.levels[k]=lv+1;save();paintResources();
+ document.querySelector('#modalText').textContent=selectedBuilding.name+' '+(lv+1)+'-ci səviyyəyə yüksəldildi!';
+ document.querySelector('#modalTags').innerHTML='<span class="tag">Səviyyə '+(lv+1)+'</span><span class="tag">Yeniləndi</span>';
+}
+function collectResources(){
+ game.wood+=250;game.stone+=160;game.iron+=80;game.gold+=35;save();paintResources();
+ document.querySelector('#modalText').textContent='Resurs anbarına əlavə edildi: 250 taxta, 160 daş, 80 dəmir və 35 qızıl.';
+}
 document.querySelector('#close').onclick=()=>document.querySelector('#modal').classList.remove('show');
 document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.bottom button').forEach(x=>x.classList.remove('active'));if(b.closest('.bottom'))b.classList.add('active');const p=b.dataset.panel;const labels={city:['Şəhər','Şəhər görünüşü aktivdir.'],army:['Ordu','Qoşun idarəetmə bölməsi növbəti mərhələdə genişləndiriləcək.'],world:['Dünya xəritəsi','Dünya xəritəsi növbəti mərhələdə əlavə olunacaq.'],alliance:['İttifaq','İttifaq sistemi növbəti mərhələdə əlavə olunacaq.'],hero:['Qəhrəman','Qəhrəmanların idarəetmə bölməsi hazırlanır.'],quests:['Tapşırıqlar','Gündəlik tapşırıqlar və mükafatlar.'],mail:['Məktublar','Krallıq xəbərləri və bildirişlər.'],events:['Hadisələr','Mövsümi tədbirlər və turnirlər.']};showPanel(labels[p][0],p);document.querySelector('#modalText').textContent=labels[p][1]});
 function animate(){requestAnimationFrame(animate);camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
