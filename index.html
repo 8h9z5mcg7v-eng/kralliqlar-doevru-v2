@@ -72,6 +72,71 @@ cylinder(scene,-13,0,0,.8,.8,.35,stone,8);cylinder(scene,-13,.35,0,.5,.5,.2,wate
 for(let i=0;i<30;i++){const a=i*2.399;const r=14+Math.random()*4;tree(Math.cos(a)*r,Math.sin(a)*r,.65+Math.random()*.6)}
 // little rocks
 for(let i=0;i<25;i++){const x=(Math.random()-.5)*35,z=(Math.random()-.5)*29;if(Math.abs(x)<10&&Math.abs(z)<9)continue;const o=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+Math.random()*.35,0),stone);o.position.set(x,.05,z);o.castShadow=true;scene.add(o)}
+
+// city-detail pass: pavements, banners, lamps, market stalls, crop rows and gardens
+(()=>{
+ const paving=mat(0x9a927e), pavingDark=mat(0x77766c), iron=mat(0x343a38), clothRed=mat(0x8b3930), clothBlue=mat(0x344f67), leafA=mat(0x526c3d), leafB=mat(0x6b8048), crop=mat(0xb6a05b);
+ // Stone paving around the central keep and along the main avenues
+ for(let i=-4;i<=4;i++){
+   box(scene,i*1.05,.015,6.1,.82,.07,.72,paving);
+   box(scene,i*1.05,.015,-6.1,.82,.07,.72,paving);
+ }
+ for(let i=-12;i<=12;i++){
+   if(i%2===0){box(scene,-2.55,.02,i*1.08,.62,.07,.68,pavingDark);box(scene,2.55,.02,i*1.08,.62,.07,.68,pavingDark)}
+ }
+ // Decorative lanterns on the inner roads
+ function lamp(x,z){
+   cylinder(scene,x,0,z,.09,.12,1.7,wood,6);
+   box(scene,x,1.55,z,.48,.1,.48,iron);
+   const glow=new THREE.Mesh(new THREE.SphereGeometry(.18,8,8),mat(0xf4cf79,.35));
+   glow.position.set(x,1.92,z);scene.add(glow);
+   cone(scene,x,2.02,z,.36,.22,iron,4);
+ }
+ [[-3.8,-8],[3.8,-8],[-3.8,8],[3.8,8],[-8,0],[8,0]].forEach(p=>lamp(p[0],p[1]));
+ // Small flags on the keep and gate
+ function flag(x,y,z,color){
+   cylinder(scene,x,y,z,.045,.055,1.35,wood,6);
+   const cloth=new THREE.Mesh(new THREE.PlaneGeometry(.9,.48),new THREE.MeshStandardMaterial({color,side:THREE.DoubleSide,roughness:.85}));
+   cloth.position.set(x+.43,y+1.02,z);cloth.rotation.y=-.12;scene.add(cloth);
+ }
+ flag(-.2,5.1,0,clothRed);flag(0,2.8,14.8,clothBlue);
+ // Market stalls outside the central plaza
+ function stall(x,z,color){
+   box(scene,x,0,z,1.9,1.15,1.35,wood);
+   for(const dx of [-.82,.82])for(const dz of [-.55,.55])cylinder(scene,x+dx,.1,z+dz,.055,.065,1.9,wood,5);
+   const canopy=new THREE.Mesh(new THREE.BoxGeometry(2.15,.16,1.65),color);
+   canopy.position.set(x,2.02,z);canopy.castShadow=true;scene.add(canopy);
+   for(let j=-1;j<=1;j++)box(scene,x+j*.58,1.3,z+.7,.42,.5,.12,wood);
+ }
+ stall(-8,9,clothRed);stall(8,-9,clothBlue);
+ // Vegetable gardens with low fences and distinct crop beds
+ function garden(x,z){
+   for(let k=0;k<3;k++){
+     box(scene,x,0,z+k*.62,3.1,.1,.08,wood);
+     for(let j=0;j<7;j++)cylinder(scene,x-1.25+j*.42,.08,z+k*.62,.055,.07,.42,crop,5);
+   }
+   for(let j=0;j<4;j++){box(scene,x-1.58+j*1.05,0,z-.25,.08,.55,.08,wood);box(scene,x-1.58+j*1.05,0,z+1.5,.08,.55,.08,wood)}
+ }
+ garden(-10,-9);garden(10,9);
+ // Small orchard clusters, kept outside building footprints
+ function shrub(x,z,m){
+   const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(.48,1),m);
+   crown.position.set(x,.48,z);crown.castShadow=true;crown.receiveShadow=true;scene.add(crown);
+ }
+ for(const p of [[-12,-8],[-12,-10],[-10,-12],[12,8],[12,10],[10,12],[-8,11],[8,-11]])shrub(p[0],p[1],leafA);
+ // Stone well details and wooden cart near the market
+ box(scene,9.8,0,-7.5,1.1,.55,.75,wood);
+ cylinder(scene,9.25,.2,-7.5,.38,.38,.12,iron,10);
+ cylinder(scene,10.35,.2,-7.5,.38,.38,.12,iron,10);
+ box(scene,9.8,.8,-7.5,.08,.85,1.05,wood);
+ // Corner watch platforms reinforce the defensive city silhouette
+ for(const p of [[-12,-12],[12,-12],[-12,12],[12,12]]){
+   box(scene,p[0],0,p[1],1.35,1.35,1.35,darkStone);
+   box(scene,p[0],1.35,p[1],1.65,.22,1.65,wood);
+   for(let q=-1;q<=1;q+=2)box(scene,p[0]+q*.62,1.55,p[1],.18,.48,1.65,stone);
+ }
+})();
+
 // camera drag / zoom
 let down=false,px=0,py=0,rot=0,tilt=0,cameraDistance=39,dragged=false;renderer.domElement.addEventListener('pointerdown',e=>{down=true;dragged=false;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;rot+=dx*.006;tilt=Math.max(-.25,Math.min(.35,tilt+dy*.003));px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{cameraDistance=Math.max(20,Math.min(58,cameraDistance*(e.deltaY>0?1.07:.93)))});
 const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();renderer.domElement.addEventListener('click',e=>{if(dragged)return;mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(scene.children,true);let obj=null;for(const hit of hits){let node=hit.object;while(node&&node!==scene){if(node.userData?.name){obj=node;break}node=node.parent}if(obj)break;}if(!obj){let p=hits[0]?.point;if(p&&p.distanceTo(new THREE.Vector3(0,0,0))<5)obj={userData:{name:'Baş Qala',kind:'castle'}}}if(obj)showPanel(obj.userData.name,obj.userData.kind)});
