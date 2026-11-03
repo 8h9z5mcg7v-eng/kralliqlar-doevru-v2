@@ -187,6 +187,17 @@ function buildDefenseTower(x,z,label){
  cylinder(g,0,2.75,0,.98,.98,.22,darkStone,8);
  for(let k=0;k<4;k++){const a=k*Math.PI/2;box(g,Math.cos(a)*.72,2.9,Math.sin(a)*.72,.22,.65,.22,stone)}
  cone(g,0,3.45,0,1.08,1.35,roofBlue,8);
+ // Tiny sentries on the battlements make the defensive line visibly occupied.
+ for(let side=0;side<2;side++){
+   const guard=new THREE.Group();
+   box(guard,0,.42,0,.28,.62,.24,side===0?wood:darkStone);
+   const head=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),gold);head.position.y=.82;guard.add(head);
+   box(guard,.2,.55,0,.07,.55,.07,wood);
+   const spear=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.95,6),iron);spear.position.set(.27,1.05,0);guard.add(spear);
+   const pennant=new THREE.Mesh(new THREE.PlaneGeometry(.28,.18),new THREE.MeshStandardMaterial({color:0x9b3c32,side:THREE.DoubleSide}));pennant.position.set(.27,1.42,0);guard.add(pennant);
+   guard.position.set(side===0?-.42:.42,3.05,.12);g.add(guard);
+ }
+
  const banner=new THREE.Mesh(new THREE.PlaneGeometry(.7,.42),new THREE.MeshStandardMaterial({color:0x8b3930,side:THREE.DoubleSide}));banner.position.set(.48,3.45,.05);g.add(banner);
  g.position.set(x,0,z);g.userData={name:label,kind:'defenseTower'};scene.add(g);defenseTowers.push(g);
 }
