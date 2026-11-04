@@ -10,7 +10,18 @@
 :root{--gold:#d9b66b;--gold2:#f4dda0;--ink:#11191e;--panel:#172329eF;--line:#9b7847;--cream:#f1e5c7}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10191d;color:var(--cream);font-family:Inter,system-ui,sans-serif}#scene{position:fixed;inset:0}canvas{display:block}
 .hud{position:fixed;inset:0;pointer-events:none}.top{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.brand{font:800 clamp(16px,2.2vw,25px) Cinzel,serif;color:var(--gold2);text-shadow:0 2px 8px #000;letter-spacing:1px}.resources{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.resource,.player{background:linear-gradient(180deg,#26363bdc,#10191deF);border:1px solid #94784c;border-radius:7px;padding:7px 10px;box-shadow:0 4px 12px #0008;font-size:12px;white-space:nowrap}.resource b{color:#f1d28a;margin-left:5px}.player{position:absolute;top:52px;left:12px;font-size:11px;color:#d7c49d}.side{position:absolute;left:12px;top:105px;display:grid;gap:7px;pointer-events:auto}.side button,.bottom button,.modal button{cursor:pointer;color:#f4e6c5;border:1px solid #9a7849;background:linear-gradient(#35454a,#172329);border-radius:7px;box-shadow:0 3px 10px #0009;font:600 11px Inter;padding:9px 11px}.side button:hover,.bottom button:hover{filter:brightness(1.3)}.bottom{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:7px;pointer-events:auto;padding:8px;background:#10191de8;border:1px solid #8c6c40;border-radius:10px;box-shadow:0 6px 22px #000b;max-width:calc(100vw - 20px)}.bottom button{min-width:68px;padding:10px 8px}.bottom button.active{background:linear-gradient(#88683a,#44321e);color:#fff1c6}.hint{position:absolute;bottom:76px;left:50%;transform:translateX(-50%);font-size:11px;color:#f6e7c5;background:#10191dbb;border:1px solid #80623d;padding:7px 12px;border-radius:20px;white-space:nowrap;text-shadow:0 1px 4px #000}.modal{display:none;position:absolute;right:14px;bottom:78px;width:min(300px,calc(100vw - 28px));pointer-events:auto;background:linear-gradient(160deg,#26363bfa,#10191dfa);border:1px solid #b08a50;border-radius:10px;padding:15px;box-shadow:0 10px 35px #000c}.modal.show{display:block}.modal.worldmode{width:min(540px,calc(100vw - 28px));max-height:82vh;overflow:auto}.battle-stage{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:18px 8px;background:radial-gradient(ellipse,#5c4930,#18272a);border:1px solid #927044;border-radius:8px}.battle-side{display:grid;text-align:center;gap:5px;font-size:27px;min-width:90px}.battle-side b{font-size:9px;color:#f1d69a}.battle-side small{font-size:10px;color:#ddd0b5}.battle-side.enemy{color:#c67c68}.battle-clash{font-size:30px;animation:clash .55s infinite alternate}.battle-progress{height:7px;background:#263333;border-radius:8px;overflow:hidden;margin:9px 0}.battle-progress i{display:block;width:100%;height:100%;background:linear-gradient(90deg,#c58c42,#f4d98e);transform-origin:left;animation:advance 2.5s linear forwards}@keyframes advance{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes clash{from{transform:scale(.85) rotate(-12deg)}to{transform:scale(1.15) rotate(12deg)}}.modal.worldmode #realmMap{max-height:48vh}.modal h2{font:700 17px Cinzel;color:var(--gold2);margin:0 0 8px}.modal p{font-size:12px;line-height:1.55;color:#ddcfb2}.modal .close{float:right;padding:4px 8px}.tag{display:inline-block;border:1px solid #87683d;border-radius:4px;padding:4px 7px;font-size:10px;color:#e7ca8c;margin:3px 3px 3px 0}
-@media(max-width:600px){.brand{font-size:15px}.resource{padding:6px 7px;font-size:10px}.side{top:112px}.side button{padding:8px;font-size:10px}.bottom{gap:4px}.bottom button{min-width:0;padding:9px 8px;font-size:10px}.player{top:48px}.hint{bottom:70px;font-size:10px}}
+@media(max-width:600px){
+ .top{top:max(10px,env(safe-area-inset-top));left:10px;right:10px;gap:6px}
+ .brand{max-width:125px;line-height:1.2}
+ .resources{max-width:64%;gap:4px}
+ .resource{padding:5px 6px;font-size:9px}
+ .player{top:58px;max-width:calc(100vw - 24px)}
+ .side{top:105px;gap:5px}
+ .side button{padding:7px 8px;font-size:10px}
+ .bottom{bottom:max(10px,env(safe-area-inset-bottom));width:calc(100vw - 16px);justify-content:space-between;gap:4px;padding:6px}
+ .bottom button{flex:1;min-width:0;padding:9px 3px;font-size:10px}
+ .hint{bottom:82px;max-width:calc(100vw - 30px);overflow:hidden;text-overflow:ellipsis}
+}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
@@ -420,7 +431,14 @@ function cityBuilding(x,z,label,kind,scale=1,accent=mRoof){
    roofGable(g,w,d,h+.52,accent);
    // roof dormers and ridge caps
    for(const xx of [-w*.27,w*.27]){slab(g,xx,h+.98,0,.52,.58,.75,accent);peak(g,xx,h+1.25,0,.43,.55,mRoof2)}
+    // roof tile ribs and ridge ornaments
+    for(let k=-2;k<=2;k++){const rib=slab(g,k*w*.19,h+.99,0,.07,.07,d*1.08,mRoofGold);rib.rotation.z=k<0?-.48:.48;}
+    post(g,0,h+1.0,-d*.58,.09,.24,mGold);post(g,0,h+1.0,d*.58,.09,.24,mGold);
  }
+  // stone doorway canopy, door studs and carved side pilasters
+  slab(g,0,2.02,d/2+.19,1.05,.13,.35,mStoneDark);
+  for(const xx of [-.19,.19])for(const yy of [.82,1.18,1.54]){const stud=new THREE.Mesh(new THREE.SphereGeometry(.045,6,5),mGold);stud.position.set(xx,yy,d/2+.225);g.add(stud);}
+  for(const xx of [-w/2+.34,w/2-.34]){slab(g,xx,.62,d/2+.16,.11,1.62,.11,mStoneDark);slab(g,xx,.62,d/2+.23,.16,.12,.13,mGold);}
  // chimney, battens and guild sign
  if(['forge','hall','temple'].includes(kind)){slab(g,w*.3,h+.75,-d*.22,.48,1.2,.48,mStoneDark);slab(g,w*.3,h+1.38,-d*.22,.58,.16,.58,mStone)}
  slab(g,w*.32,1.55,d/2+.18,.82,.36,.12,kind==='market'?mGold:mWood);
