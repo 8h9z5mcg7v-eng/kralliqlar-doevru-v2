@@ -717,10 +717,27 @@ function renderMode(p){
  }else if(p==='quests'){
    const done={collect:(game.questCollects||0)>0,build:(game.questBuilds||0)>0,train:(game.questTraining||0)>0};
    const mark=v=>v?'✅':'⬜';
-   document.querySelector('#modalText').innerHTML='<b style="color:#f0d39a">KRALLIQ TAPŞIRIĞI</b><div style="margin:9px 0;line-height:2">'+mark(done.collect)+' Resursları ən azı 1 dəfə topla<br>'+mark(done.build)+' Hər hansı binanı inkişaf etdir<br>'+mark(done.train)+' Yeni qoşun dəstəsi hazırla</div><div style="font-size:11px;color:#d9c59e">Mükafat: 100 qızıl · 150 ərzaq</div>';
-   document.querySelector('#modalTags').innerHTML='<span class="tag">'+Object.values(done).filter(Boolean).length+'/3 tapşırıq</span><span class="tag">'+(game.questClaimed?'Mükafat alınıb':'Mükafat gözləyir')+'</span>';
-   const claim=()=>{if(game.questClaimed){document.querySelector('#modalText').textContent='Bu tapşırığın mükafatı artıq götürülüb.';return}if(!Object.values(done).every(Boolean)){document.querySelector('#modalText').textContent='Mükafatı almaq üçün hər üç tapşırığı tamamla.';return}game.questClaimed=true;game.gold+=100;game.food+=150;save();paintResources();renderMode('quests')};
-   addAction(game.questClaimed?'✅ Mükafat götürülüb':'🎁 Mükafatı al',claim);
+   const today=new Date().toLocaleDateString('en-CA');
+   if(game.dailyQuestDate!==today){
+     game.dailyQuestDate=today;game.dailyQuestClaimed=false;
+     game.dailyQuestBase={collect:game.questCollects||0,build:game.questBuilds||0,train:game.questTraining||0};
+   }
+   const base=game.dailyQuestBase||{collect:0,build:0,train:0};
+   const progress={collect:Math.max(0,(game.questCollects||0)-base.collect),build:Math.max(0,(game.questBuilds||0)-base.build),train:Math.max(0,(game.questTraining||0)-base.train)};
+   const dailyDone={collect:progress.collect>=2,build:progress.build>=1,train:progress.train>=2};
+   const dailyCount=Object.values(dailyDone).filter(Boolean).length;
+   document.querySelector('#modalText').innerHTML='<b style="color:#f0d39a">GÜNLÜK KRALLIQ TAPŞIRIQLARI</b><div style="margin:9px 0;line-height:2">'+mark(dailyDone.collect)+' Resurs topla · '+Math.min(2,progress.collect)+'/2<br>'+mark(dailyDone.build)+' Bir binanı inkişaf etdir · '+Math.min(1,progress.build)+'/1<br>'+mark(dailyDone.train)+' Qoşun təlimi keçir · '+Math.min(2,progress.train)+'/2</div><div style="font-size:11px;color:#d9c59e">Gündəlik mükafat: 180 qızıl · 250 ərzaq · 40 təcrübə</div><hr style="border-color:#80633d;margin:10px 0"><b style="color:#f0d39a">İLK KRALLIQ TAPŞIRIĞI</b><div style="font-size:11px;line-height:1.9;margin-top:5px">'+mark(done.collect)+' Resursları ən azı 1 dəfə topla<br>'+mark(done.build)+' Hər hansı binanı inkişaf etdir<br>'+mark(done.train)+' Yeni qoşun dəstəsi hazırla</div>';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">Gündəlik: '+dailyCount+'/3</span><span class="tag">'+(game.dailyQuestClaimed?'Gündəlik mükafat alınıb':'Gündəlik mükafat hazır deyil')+'</span>';
+   addAction(game.dailyQuestClaimed?'✅ Gündəlik mükafat alınıb':'🎁 Gündəlik mükafatı al',()=>{
+     if(game.dailyQuestClaimed){document.querySelector('#modalText').textContent='Bugünkü mükafatı artıq götürmüsən.';return}
+     if(dailyCount!==3){document.querySelector('#modalText').textContent='Gündəlik mükafat üçün hər üç tapşırığı tamamla.';return}
+     game.dailyQuestClaimed=true;game.gold+=180;game.food+=250;game.xp=(game.xp||0)+40;save();paintResources();renderMode('quests');
+   });
+   addAction(game.questClaimed?'✅ İlk mükafat alınıb':'🎁 İlk mükafatı al · 100 qızıl',()=>{
+     if(game.questClaimed){document.querySelector('#modalText').textContent='İlk tapşırığın mükafatı artıq götürülüb.';return}
+     if(!Object.values(done).every(Boolean)){document.querySelector('#modalText').textContent='İlk mükafat üçün hər üç tapşırığı tamamla.';return}
+     game.questClaimed=true;game.gold+=100;game.food+=150;save();paintResources();renderMode('quests');
+   });
  }
  save();
 }
