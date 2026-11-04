@@ -15,7 +15,92 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="scene"></div>
+<div id="scene"><canvas id="city-fallback" aria-label="Krallığın 3D səhnəsi"></canvas></div>
+<style>
+#scene{z-index:0}#city-fallback{position:absolute;inset:0;width:100%;height:100%;display:block}
+#scene canvas:not(#city-fallback){position:absolute;inset:0;width:100%;height:100%;z-index:2}
+</style>
+<script>
+(function(){
+ const c=document.getElementById('city-fallback'),ctx=c.getContext('2d');
+ if(!ctx)return;
+ const dpr=Math.min(window.devicePixelRatio||1,2);
+ function poly(points,fill,stroke='#493d2d',lw=1){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}}
+ function rect(x,y,w,h,fill,stroke='#493d2d'){ctx.fillStyle=fill;ctx.fillRect(x,y,w,h);if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.strokeRect(x,y,w,h)}}
+ function line(points,color='#3d3025',lw=2){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.stroke()}
+ function building(x,y,w,h,roof='#713e32',wall='#c0ad8c'){
+  // shadow, walls, roof planes, timber frame, door and windows
+  poly([[x-w/2,y],[x,y-10],[x+w/2,y],[x+w/2,y+h],[x,y+h+10],[x-w/2,y+h]],'#4a473b');
+  poly([[x-w/2,y],[x,y-10],[x,y+h-10],[x-w/2,y+h]],wall);
+  poly([[x,y-10],[x+w/2,y],[x+w/2,y+h],[x,y+h-10]],'#9b896e');
+  poly([[x-w/2-5,y],[x,y-h*.42],[x+w/2+5,y],[x,y+8]],roof);
+  poly([[x-w/2-5,y],[x,y-h*.42],[x,y+8]],'#8e5541');
+  line([[x-w/2+5,y+8],[x-w/2+5,y+h-3],[x,y+h+5]],'#563c2b',3);
+  line([[x+w/2-5,y+8],[x+w/2-5,y+h-3],[x,y+h+5]],'#563c2b',3);
+  rect(x-7,y+h-27,14,27,'#493326');
+  rect(x-w*.28,y+14,10,13,'#526b70');rect(x+w*.18,y+14,10,13,'#526b70');
+ }
+ function tower(x,y,r,h,roof='#354e59'){
+  ctx.fillStyle='#6c6b61';ctx.fillRect(x-r,y-h,r*2,h);
+  poly([[x-r-4,y-h],[x,y-h-18],[x+r+4,y-h]],'#b8ad98');
+  for(let i=-1;i<=1;i++)ctx.fillRect(x+i*r*.65-3,y-h-5,6,9);
+  poly([[x-r-5,y-h],[x,y-h-35],[x+r+5,y-h]],roof);
+  ctx.fillStyle='#d7b66f';ctx.fillRect(x-2,y-h-5,4,10);
+ }
+ function draw(){
+  const W=innerWidth,H=innerHeight;
+  c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+  const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#9db5b6');sky.addColorStop(.58,'#c5c2a5');sky.addColorStop(1,'#59694b');rect(0,0,W,H,sky,null);
+  const scale=Math.min(W/440,H/650),cx=W*.5,cy=H*.53;
+  ctx.save();ctx.translate(cx,cy);ctx.scale(scale,scale);
+  // distant hills and forest
+  poly([[-310,35],[-235,-45],[-150,5],[-70,-65],[20,0],[115,-75],[220,0],[310,-35],[350,110],[-340,110]],'#637c54',null);
+  for(let i=0;i<22;i++){const x=-300+i*28,y=30+Math.sin(i*2)*22;ctx.fillStyle=i%2?'#355b3d':'#456b42';ctx.beginPath();ctx.arc(x,y,17,0,Math.PI*2);ctx.fill()}
+  // broad diamond island
+  poly([[-300,30],[0,-145],[300,30],[0,205]],'#6c8150','#4b5a3e',4);
+  poly([[-270,30],[0,-125],[270,30],[0,180]],'#82905a','#4d6041',2);
+  // roads
+  poly([[-24,176],[-6,164],[10,-118],[31,-127],[16,164],[4,184]],'#b39c75','#786548');
+  poly([[-270,18],[-260,5],[260,5],[278,20],[0,170]],'#b39c75','#786548');
+  // castle outer wall and parapet
+  poly([[-205,12],[0,-112],[205,12],[0,136]],'#827d6e','#46463e',5);
+  poly([[-194,10],[0,-105],[194,10],[0,126]],'#b1a58d','#5d574b',2);
+  // crenellated wall segments
+  for(let i=0;i<9;i++){const t=i/8;const x=-190+t*190,y=10-t*115;rect(x-5,y-12,11,17,'#c4b69a');}
+  for(let i=0;i<9;i++){const t=i/8;const x=190-t*190,y=10-t*115;rect(x-5,y-12,11,17,'#c4b69a');}
+  // corner towers
+  tower(-195,14,13,72);tower(195,14,13,72);tower(0,-112,13,74,'#713e32');tower(0,133,13,74);
+  // central keep
+  poly([[-62,-25],[0,-65],[62,-25],[62,34],[0,72],[-62,34]],'#77786e','#3e403a',3);
+  poly([[-62,-25],[0,-65],[0,13],[-62,50]],'#b5a991');
+  poly([[0,-65],[62,-25],[62,34],[0,13]],'#8e897a');
+  poly([[-54,-28],[0,-87],[54,-28],[0,-2]],'#714238');
+  poly([[-18,-47],[0,-75],[18,-47],[0,-32]],'#a46a45');
+  rect(-9,20,18,31,'#453326');tower(-53,5,9,63);tower(53,5,9,63);
+  // service buildings around central castle
+  building(-125,15,52,39,'#714238','#c8b18a');
+  building(120,8,54,41,'#354e59','#b7a88a');
+  building(-116,76,54,38,'#854b37','#c1ac8b');
+  building(112,73,56,41,'#354e59','#c4b18d');
+  building(-52,99,48,34,'#854b37','#bba783');
+  building(52,-73,48,34,'#354e59','#c6b48f');
+  building(-158,-40,43,32,'#354e59','#b7a88a');
+  building(158,-39,43,32,'#854b37','#c6b48f');
+  // stable yard, market awnings, crop rows
+  poly([[-158,94],[-122,73],[-91,91],[-128,114]],'#a88e62');
+  for(let i=0;i<5;i++)line([[-147+i*8,93-i*4],[-126+i*8,105-i*4]],'#627a3f',3);
+  poly([[138,101],[172,82],[192,95],[157,116]],'#9b7953');
+  line([[142,91],[168,106],[188,95]],'#a04f36',6);
+  // flags
+  line([[0,-105],[0,-142]],'#48352a',3);poly([[0,-140],[30,-132],[0,-121]],'#a43f32',null);
+  line([54,-46],[54,-72],'#493528',2);poly([[54,-70],[73,-64],[54,-56]],'#b18b45',null);
+  // trees around the city
+  for(let i=0;i<18;i++){const x=-245+(i*29)%490,y=110+Math.sin(i*3)*38;ctx.fillStyle='#493b2c';ctx.fillRect(x-2,y,4,13);ctx.fillStyle=i%2?'#35583b':'#486b42';ctx.beginPath();ctx.arc(x,y,10+(i%3)*3,0,Math.PI*2);ctx.fill()}
+  ctx.restore();
+ }
+ draw();window.addEventListener('resize',draw);
+})();
+</script>
 <div class="hud">
  <div class="top"><div class="brand">KRALLIQLAR DÖVRÜ</div><div class="resources"><div class="resource">🪵 <b id="wood">12 500</b></div><div class="resource">🪨 <b id="stone">8 200</b></div><div class="resource">⚒️ <b id="iron">4 600</b></div><div class="resource">🪙 <b id="gold">2 100</b></div></div></div>
  <div class="player">SƏVİYYƏ 1 · Gənc hökmdar</div>
