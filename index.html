@@ -488,7 +488,76 @@ function cityTree(x,z,s=1){post(city,x,0,z,.18*s,1.25*s,mWood);for(let j=0;j<3;j
 for(const p of [[-15,-11],[-15,-8],[-15,9],[-12,12],[15,-11],[15,10],[11,13],[-5,13],[5,-13]])cityTree(p[0],p[1],.8);
 for(let i=0;i<14;i++){const x=-15+(i%7)*5,z=i<7?-18:18;const b=slab(city,x,-.1,z,.25,.6,.25,mWood);b.rotation.z=.2}
 
-window.__cityUpgradeVisual=(kind,level)=>{
+
+ // ===== VISUAL PASS 2026: richer royal capital, terrain, banners and warm lighting =====
+ const v26stone=new THREE.MeshStandardMaterial({color:0x77786f,roughness:.96});
+ const v26cliff=new THREE.MeshStandardMaterial({color:0x555b50,roughness:1});
+ const v26pine=new THREE.MeshStandardMaterial({color:0x294a35,roughness:1});
+ const v26pine2=new THREE.MeshStandardMaterial({color:0x3e6340,roughness:1});
+ const v26water=new THREE.MeshStandardMaterial({color:0x397f91,roughness:.2,metalness:.12,transparent:true,opacity:.88});
+ const v26cloth=new THREE.MeshStandardMaterial({color:0x173e78,roughness:.8,side:THREE.DoubleSide});
+ const v26gold=new THREE.MeshStandardMaterial({color:0xd0a64d,metalness:.55,roughness:.4});
+ // Rocky mountain ridges create a natural horizon around the walled city.
+ for(let i=0;i<15;i++){
+   const a=i/15*Math.PI*2,rad=26+(i%3)*1.8,h=5.5+(i%5)*1.25;
+   const rock=new THREE.Mesh(new THREE.ConeGeometry(3.8+(i%3)*.7,h,6),v26cliff);
+   rock.position.set(Math.cos(a)*rad,h*.38,Math.sin(a)*rad);rock.rotation.y=a;rock.castShadow=true;city.add(rock);
+   const snow=new THREE.Mesh(new THREE.ConeGeometry(1.35+(i%2)*.35,h*.24,6),mStoneLit);
+   snow.position.set(Math.cos(a)*rad,h*.77,Math.sin(a)*rad);snow.rotation.y=a;city.add(snow);
+ }
+ // Dense evergreen groves outside the walls, with varied heights.
+ function v26tree(x,z,k=1){
+   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.12*k,.2*k,1.35*k,7),mWood);
+   trunk.position.set(x,.65*k,z);trunk.castShadow=true;city.add(trunk);
+   for(let n=0;n<3;n++){
+     const crown=new THREE.Mesh(new THREE.ConeGeometry((1.05-n*.17)*k,1.65*k,7),n===1?v26pine2:v26pine);
+     crown.position.set(x,(1.45+n*.62)*k,z);crown.castShadow=true;city.add(crown);
+   }
+ }
+ for(let i=0;i<46;i++){
+   const side=i%4, t=(Math.floor(i/4)/12-.5)*34;
+   const x=side===0?-22.5:side===1?22.5:t;
+   const z=side===2?-20.5:side===3?20.5:t;
+   v26tree(x+(i%3-1)*.65,z+((i*7)%3-1)*.6,.72+(i%4)*.12);
+ }
+ // Watercourse and waterfall on the eastern edge of the kingdom.
+ const v26river=new THREE.Mesh(new THREE.BoxGeometry(4.2,.16,34),v26water);
+ v26river.position.set(23,-.1,0);city.add(v26river);
+ for(let i=0;i<5;i++){
+   const fall=new THREE.Mesh(new THREE.BoxGeometry(.22,3.8,.42),v26water);
+   fall.position.set(20.7+i*.18,-.05,-12+i*5.5);fall.rotation.z=.06;city.add(fall);
+ }
+ // Gold-and-blue royal standards on the keep and main gate.
+ function v26banner(parent,x,y,z,scale=1){
+   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,2.3*scale,8),v26gold);
+   pole.position.set(x,y+1.15*scale,z);parent.add(pole);
+   const flag=new THREE.Mesh(new THREE.PlaneGeometry(.92*scale,.62*scale),v26cloth);
+   flag.position.set(x+.42*scale,y+1.78*scale,z);flag.rotation.y=.08;parent.add(flag);
+   const emblem=new THREE.Mesh(new THREE.ConeGeometry(.16*scale,.28*scale,3),v26gold);
+   emblem.position.set(x+.42*scale,y+1.78*scale,z+.025);emblem.rotation.z=Math.PI;parent.add(emblem);
+ }
+ v26banner(keep,-.25,8.5,-.1,1.05);v26banner(gate,0,5.05,.9,.8);
+ // Lanterns and warm pools of light make the main avenue feel inhabited at dusk.
+ for(const [x,z] of [[-3,-10],[3,-10],[-3,10],[3,10],[-15,0],[15,0]]){
+   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.1,2.1,7),mWood);pole.position.set(x,1.05,z);city.add(pole);
+   const lamp=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),new THREE.MeshBasicMaterial({color:0xffc66d}));lamp.position.set(x,2.15,z);city.add(lamp);
+   const glow=new THREE.PointLight(0xffb75c,.48,5);glow.position.set(x,2.25,z);city.add(glow);
+ }
+ // Paved market square with colorful awnings, stalls and stacked goods.
+ for(let i=0;i<4;i++){
+   const x=10.5+(i%2)*2.2,z=2.5+Math.floor(i/2)*2.0;
+   const counter=new THREE.Mesh(new THREE.BoxGeometry(1.55,.85,.72),mWood);counter.position.set(x,.48,z);counter.castShadow=true;city.add(counter);
+   const canopy=new THREE.Mesh(new THREE.ConeGeometry(1.05,.62,4),i%2?mRoof2:mRoof);canopy.position.set(x,1.45,z);canopy.rotation.y=Math.PI/4;city.add(canopy);
+   for(let k=0;k<3;k++){const crate=new THREE.Mesh(new THREE.BoxGeometry(.28,.28,.28),k%2?mGold:mWood);crate.position.set(x-.42+k*.4,.98,z+.42);city.add(crate)}
+ }
+ // Extra crenellations and royal shields visually articulate the curtain wall.
+ for(let side=0;side<4;side++)for(let i=0;i<11;i++){
+   const t=-15+i*3, x=side===0?-17.55:side===1?17.55:t, z=side===2?-15.55:side===3?15.55:t;
+   const shield=new THREE.Mesh(new THREE.ConeGeometry(.32,.52,4),v26gold);
+   shield.position.set(x,2.05,z);shield.rotation.z=Math.PI;city.add(shield);
+ }
+
+ window.__cityUpgradeVisual=(kind,level)=>{
  const target=newBuildings.find(b=>b.userData.kind===kind)|| (kind==='castle'?keep:null);
  if(!target)return;
  const prior=target.userData.visualUpgradeLevel||1;
