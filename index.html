@@ -524,6 +524,53 @@ slab(keep,0,4.65,0,4.2,3.2,3.8,mStone);slab(keep,0,7.8,0,4.6,.35,4.2,mStoneDark)
 slab(keep,0,1.05,3.36,1.6,2.5,.2,mWood);slab(keep,0,3.65,3.5,2,.18,.2,mGold);
 for(const x of [-.45,.45]){slab(keep,x,5.7,1.95,.28,.9,.12,mGold)}
 keep.position.set(0,-.35,-.1);keep.userData={name:'Baş Qala',kind:'castle'};city.add(keep);
+
+ // Royal keep visual rebuild: layered gate, arched windows, balconies and heraldic roof.
+ (()=>{
+   const keepTrim=new THREE.MeshStandardMaterial({color:0xaaa28e,roughness:.88});
+   const keepShadow=new THREE.MeshStandardMaterial({color:0x343b3b,roughness:.95});
+   const keepBlue=new THREE.MeshStandardMaterial({color:0x234b70,roughness:.72,side:THREE.DoubleSide});
+   // Projecting stone base and broad ceremonial stair on the front approach.
+   slab(keep,0,-.32,3.95,8.9,.34,2.1,mStoneDark);
+   for(let n=0;n<5;n++)slab(keep,0,-.1+n*.23,4.45+n*.32,3.1,.2,.62,keepTrim);
+   // Recessed arched entrance, heavy doors and iron crossbars.
+   slab(keep,0,1.42,3.49,2.15,2.9,.22,keepShadow);
+   slab(keep,0,1.28,3.64,1.72,2.55,.16,mWood);
+   for(let x=-.65;x<=.66;x+=.22)slab(keep,x,1.35,3.75,.055,2.45,.055,mGold);
+   slab(keep,0,2.7,3.77,1.9,.16,.18,keepTrim);
+   // Tall paired stained-glass lancet windows on the central tower.
+   for(const x of [-1.05,1.05]){
+     slab(keep,x,5.55,2.02,.58,1.55,.13,keepShadow);
+     slab(keep,x,5.58,2.11,.37,1.2,.05,keepBlue);
+     slab(keep,x,5.58,2.15,.055,1.28,.035,mGold);
+     slab(keep,x,5.58,2.15,.42,.055,.035,mGold);
+     peak(keep,x,6.38,2.08,.34,.48,keepTrim,4);
+   }
+   // Battlemented balcony wrapping the central tower.
+   slab(keep,0,7.55,2.18,4.9,.24,.42,mStoneDark);
+   for(let x=-2.2;x<=2.21;x+=.55)slab(keep,x,7.92,2.2,.3,.52,.34,keepTrim);
+   // Roof dormers and gilded ridge finials.
+   for(const x of [-1.55,1.55]){
+     slab(keep,x,8.55,.15,.72,.75,.82,mStone);
+     peak(keep,x,9.0,.15,.58,.85,mRoofGold,4);
+     post(keep,x,9.82,.15,.065,.72,mGold);
+   }
+   // Royal blue standards with gold spear finials at the four corner towers.
+   for(const [x,z] of [[-3.15,-2.65],[3.15,-2.65],[-3.15,2.65],[3.15,2.65]]){
+     post(keep,x,7.05,z,.055,2.0,mGold);
+     const cloth=new THREE.Mesh(new THREE.PlaneGeometry(.82,.58),keepBlue);
+     cloth.position.set(x+.38,7.68,z+.03);keep.add(cloth);
+     slab(keep,x+.38,7.68,z+.07,.12,.36,.045,mGold);
+     peak(keep,x,8.18,z,.15,.28,mGold,4);
+   }
+   // Warm braziers at the foot of the keep.
+   for(const x of [-2.5,2.5]){
+     post(keep,x,.45,4.0,.12,.9,mWood);
+     const flame=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),new THREE.MeshStandardMaterial({color:0xffa33b,emissive:0xe45b12,emissiveIntensity:1.6}));
+     flame.position.set(x,1.12,4.0);keep.add(flame);
+   }
+ })();
+
 // distinct service buildings in clear plots, arranged around the keep
 const newBuildings=[
  cityBuilding(-8,-8,'Kazarma','barracks',1.05,mRoof),
