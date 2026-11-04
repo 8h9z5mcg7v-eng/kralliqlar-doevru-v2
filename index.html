@@ -503,6 +503,42 @@ function cityBuilding(x,z,label,kind,scale=1,accent=mRoof){
  for(let k=0;k<3;k++)slab(g,0,.12+k*.12,d*.5+.32+k*.13,1.12,.12,.42,mStoneLit);
  const crest=new THREE.Mesh(new THREE.OctahedronGeometry(.22,0),mGold);crest.position.set(0,h+1.62,d*.12);g.add(crest);
 
+
+ // Fine architectural surface pass: stone courses, carved lintels and roof tile seams.
+ const courseMat=C(0x77756c),lightStone=C(0xd0c4a8),tileDark=C(0x4a3030),glassWarm=new THREE.MeshStandardMaterial({color:0xffbd68,emissive:0xc66b27,emissiveIntensity:.32,roughness:.35});
+ for(let row=0;row<3;row++){
+   const yy=.82+row*.57;
+   // Front and rear masonry joints are inset, not raised blocks, so they read as real stonework.
+   for(let xx=-w/2+.38;xx<w/2-.2;xx+=.62){
+     if(Math.abs(xx)<.43&&yy<1.95)continue;
+     slab(g,xx,yy,d/2+.062,.36,.025,.018,courseMat);
+     slab(g,xx,yy,-d/2-.062,.36,.025,.018,courseMat);
+   }
+ }
+ // Carved pale-stone lintels and sills frame each opening.
+ for(const xx of [-w*.29,w*.29]){
+   slab(g,xx,1.56,d/2+.245,.54,.09,.08,lightStone);
+   slab(g,xx,.86,d/2+.245,.54,.09,.08,lightStone);
+   const glow=new THREE.Mesh(new THREE.PlaneGeometry(.22,.28),glassWarm);
+   glow.position.set(xx,1.22,d/2+.252);g.add(glow);
+ }
+ // Repeated roof tile courses add a scaled, shingled silhouette to pitched roofs.
+ if(kind!=='stable'){
+   for(let row=0;row<4;row++){
+     const zz=-d*.42+row*d*.28;
+     for(let col=-2;col<=2;col++){
+       const tile=slab(g,col*w*.17,h+1.0,zz,.42,.055,.32,(row+col)%3===0?tileDark:accent);
+       tile.rotation.z=col<0?-.48:.48;
+     }
+   }
+ }
+ // Corner foundation stones and a small carved guild crest.
+ for(const xx of [-w/2-.02,w/2+.02])for(const zz of [-d/2-.02,d/2+.02]){
+   for(let row=0;row<3;row++)slab(g,xx,.12+row*.38,zz,.28,.3,.28,row%2?mStoneLit:mStoneDark);
+ }
+ const badgePlate=slab(g,0,2.42,d/2+.24,.56,.48,.1,mGold);
+ const badgeCore=new THREE.Mesh(new THREE.OctahedronGeometry(.16,0),mRoof2);badgeCore.position.set(0,2.68,d/2+.31);g.add(badgeCore);
+
  g.position.set(x,0,z);g.userData={name:label,kind};city.add(g);return g;
 }
 // broad raised terrain, grass terraces and cobbled lanes
