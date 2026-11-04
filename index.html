@@ -570,6 +570,25 @@ function showPanel(name,kind){
  if(kind==='farm'||kind==='lumber'||kind==='market'||kind==='store'||kind==='castle'){
    const collect=document.createElement('button');collect.textContent='📦 Resursları topla';collect.onclick=collectResources;actions.appendChild(collect);
  }
+ if(kind==='market'){
+   const title=document.createElement('div');title.style.cssText='width:100%;font-size:12px;color:#f0d39a;margin:8px 0 3px';title.textContent='🪙 TİCARƏT MÜBADİLƏSİ';actions.appendChild(title);
+   const deals=[
+    {label:'🪵 500 taxta → 250 daş',give:'wood',cost:500,get:'stone',gain:250},
+    {label:'🪨 500 daş → 200 dəmir',give:'stone',cost:500,get:'iron',gain:200},
+    {label:'⚒️ 300 dəmir → 180 qızıl',give:'iron',cost:300,get:'gold',gain:180},
+    {label:'🪙 250 qızıl → 450 ərzaq',give:'gold',cost:250,get:'food',gain:450},
+    {label:'🌾 500 ərzaq → 300 taxta',give:'food',cost:500,get:'wood',gain:300}
+   ];
+   deals.forEach(d=>{
+     const b=document.createElement('button');b.textContent=d.label;b.onclick=()=>{
+       if((game[d.give]||0)<d.cost){document.querySelector('#modalText').textContent='Mübadilə üçün kifayət qədər '+({wood:'taxta',stone:'daş',iron:'dəmir',gold:'qızıl',food:'ərzaq'}[d.give])+' yoxdur.';return}
+       game[d.give]-=d.cost;game[d.get]=(game[d.get]||0)+d.gain;
+       game.tradeCount=(game.tradeCount||0)+1;save();paintResources();
+       document.querySelector('#modalText').textContent='Mübadilə tamamlandı: '+d.cost+' '+d.give+' verildi, '+d.gain+' '+d.get+' alındı.';
+       document.querySelector('#modalTags').innerHTML='<span class="tag">Ticarət sayı: '+game.tradeCount+'</span>';
+     };actions.appendChild(b);
+   });
+ }
  document.querySelector('#modal').classList.add('show');
 }
 function upgradeSelected(){
