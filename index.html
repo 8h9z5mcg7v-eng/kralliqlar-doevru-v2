@@ -740,6 +740,44 @@ for(let i=0;i<14;i++){const x=-15+(i%7)*5,z=i<7?-18:18;const b=slab(city,x,-.1,z
  }
 
  
+
+ // Royal gate garrison: armored sentries, spears, shields and two mounted patrols.
+ const royalGuards=[];
+ const armorMat=C(0x53616b),redCloak=C(0x873d32),shieldMat=C(0xb28a48);
+ function makeRoyalGuard(x,z,turn=0){
+   const g=new THREE.Group();
+   const torso=new THREE.Mesh(new THREE.CylinderGeometry(.22,.29,.78,8),armorMat);torso.position.y=.88;g.add(torso);
+   const skirt=new THREE.Mesh(new THREE.CylinderGeometry(.3,.34,.25,8),redCloak);skirt.position.y=.43;g.add(skirt);
+   const head=new THREE.Mesh(new THREE.SphereGeometry(.19,10,8),walkerSkin);head.position.y=1.42;g.add(head);
+   const helm=new THREE.Mesh(new THREE.ConeGeometry(.23,.32,8),mStoneDark);helm.position.y=1.62;g.add(helm);
+   const shield=new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.09,8),shieldMat);shield.rotation.x=Math.PI/2;shield.position.set(-.35,.88,.1);g.add(shield);
+   const spear=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,1.9,6),mWood);spear.position.set(.36,1.25,0);g.add(spear);
+   const spearTip=new THREE.Mesh(new THREE.ConeGeometry(.09,.32,6),mGold);spearTip.position.set(.36,2.35,0);g.add(spearTip);
+   g.position.set(x,0,z);g.rotation.y=turn;city.add(g);royalGuards.push(g);
+ }
+ makeRoyalGuard(-1.7,-13.2,0);makeRoyalGuard(1.7,-13.2,0);
+ makeRoyalGuard(-16.2,-4.2,Math.PI/2);makeRoyalGuard(16.2,4.2,-Math.PI/2);
+ // Mounted patrols circle the inner courtyard on a slow, continuous route.
+ const mountedPatrols=[];
+ function makeMountedPatrol(x,z,phase){
+   const g=new THREE.Group();
+   const horseMat=C(0x68452f),dark=C(0x30251f);
+   const body=new THREE.Mesh(new THREE.BoxGeometry(1.12,.58,.43),horseMat);body.position.y=.88;g.add(body);
+   const neck=new THREE.Mesh(new THREE.CylinderGeometry(.17,.24,.78,7),horseMat);neck.position.set(.43,1.22,0);neck.rotation.z=-.42;g.add(neck);
+   const head=new THREE.Mesh(new THREE.BoxGeometry(.34,.35,.31),horseMat);head.position.set(.69,1.52,0);g.add(head);
+   const mane=new THREE.Mesh(new THREE.BoxGeometry(.12,.56,.36),dark);mane.position.set(.42,1.47,0);g.add(mane);
+   for(const lx of [-.35,.35])for(const lz of [-.16,.16]){
+     const leg=new THREE.Mesh(new THREE.CylinderGeometry(.055,.07,.62,6),dark);leg.position.set(lx,.42,lz);g.add(leg);
+   }
+   const rider=new THREE.Group();
+   const chest=new THREE.Mesh(new THREE.CylinderGeometry(.2,.25,.62,8),armorMat);chest.position.y=1.88;rider.add(chest);
+   const headR=new THREE.Mesh(new THREE.SphereGeometry(.16,8,8),walkerSkin);headR.position.y=2.32;rider.add(headR);
+   const lance=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.5,6),mWood);lance.position.set(.28,2.28,0);lance.rotation.z=-.18;rider.add(lance);
+   g.add(rider);g.position.set(x,0,z);g.userData={phase};city.add(g);mountedPatrols.push(g);
+ }
+ makeMountedPatrol(-8,-6,0);makeMountedPatrol(8,6,Math.PI);
+ window.__royalGuards=royalGuards;window.__mountedPatrols=mountedPatrols;
+
  // Animated town life inside the rebuilt capital: guards, merchants and villagers.
  const cityWalkers=[];
  const walkerCloth=[C(0x8d4937),C(0x315b78),C(0x9a7a43),C(0x526344),C(0x704d78)];
@@ -1215,7 +1253,7 @@ function addSmoke(x,z,height){
 addSmoke(-12.1,-3.65,3.2);
 addSmoke(-2.1,-13.7,3.3);
 const forgeGlow=new THREE.PointLight(0xff8b38,1.1,6);forgeGlow.position.set(-12.5,1.3,-1.6);scene.add(forgeGlow);
-function animate(){requestAnimationFrame(animate);const t=performance.now()*.001;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
+function animate(){requestAnimationFrame(animate);const t=performance.now()*.001;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
 </body></html>
