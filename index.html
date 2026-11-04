@@ -659,7 +659,7 @@ function renderMode(p){
    });
    addAction('⚔️ Qara Qartala hücum',()=>{
      if(!target||target!=='rival'){document.querySelector('#targetInfo').textContent='Əvvəlcə qırmızı Qara Qartal nişanını seç.';return}
-     const basePower=(game.infantry||0)+(game.archers||0)*1.2+(game.cavalry||0)*1.5;const power=Math.round(basePower*getHeroBonus());const cityDefense=getCityDefense();
+     const basePower=(game.infantry||0)+(game.archers||0)*1.2+(game.cavalry||0)*1.5;const warBonus=game.heroWarCry?1.15:1;const power=Math.round(basePower*getHeroBonus()*warBonus);game.heroWarCry=false;const cityDefense=getCityDefense();
      if(power<160){document.querySelector('#targetInfo').textContent='Qoşun gücün 160-dan azdır. Əvvəlcə ordu hazırla.';return}
      if(game.food<250){document.querySelector('#targetInfo').textContent='Hücum üçün 250 ərzaq lazımdır.';return}
      game.food-=250;save();paintResources();
@@ -685,7 +685,7 @@ function renderMode(p){
    document.querySelector('#modalText').innerHTML='Krallıq hadisələri və şəhər müdafiəsi.<div style="margin:12px 0 5px;font-size:11px">Divarların möhkəmliyi: <b id="wallHpText">'+game.wallHp+'/1000</b></div><div style="height:10px;background:#332b24;border-radius:8px;overflow:hidden"><div id="wallHpBar" style="height:100%;width:'+game.wallHp/10+'%;background:linear-gradient(90deg,#a94b38,#d7b46c)"></div></div><p style="font-size:10px">Düşmən basqınlarını dəf et və zədələnmiş divarları təmir et.</p>';
    document.querySelector('#modalTags').innerHTML='<span class="tag">Sərhəd müharibəsi</span><span class="tag">Müdafiə: '+getCityDefense()+'</span>';
    addAction('🔥 Düşmən basqını başlat',()=>{
-     const defense=getCityDefense(),attack=180+(game.raidsSurvived||0)*25,guard=Math.min(25,Math.floor((game.infantry||0)/20));
+     const defense=getCityDefense()+(game.heroShield?120:0),attack=180+(game.raidsSurvived||0)*25,guard=Math.min(25,Math.floor((game.infantry||0)/20));game.heroShield=false;
      const damage=Math.max(15,attack-(defense+guard*4)*.45);
      if(defense>=attack){game.gold+=80;game.xp=(game.xp||0)+15;game.raidsSurvived=(game.raidsSurvived||0)+1;document.querySelector('#modalText').innerHTML='🛡️ Basqın dəf edildi! +80 qızıl, +15 təcrübə.<div>Divarların möhkəmliyi: '+game.wallHp+'/1000</div>'}
      else{game.wallHp=Math.max(0,game.wallHp-Math.round(damage));game.infantry=Math.max(0,(game.infantry||0)-Math.ceil(guard*.12));document.querySelector('#modalText').innerHTML='⚠️ Düşmən divarlara zərər vurdu! <b>'+Math.round(damage)+'</b> möhkəmlik itirildi.<div>Divarların möhkəmliyi: '+game.wallHp+'/1000</div>'}
@@ -708,6 +708,9 @@ function renderMode(p){
    document.querySelector('#modalTags').innerHTML='<span class="tag">Qəhrəman · Səviyyə '+heroLevel+'</span><span class="tag">Hücum +'+((heroLevel-1)*3)+'%</span>';
    addAction('📚 Sərkərdə təlimi · 150 qızıl',()=>{if(game.gold<150){document.querySelector('#modalText').textContent='Təlim üçün 150 qızıl lazımdır.';return}game.gold-=150;game.xp=(game.xp||0)+35;save();paintResources();renderMode('hero')});
    addAction('⚔️ Döyüş hazırlığı · 100 ərzaq',()=>{if(game.food<100){document.querySelector('#modalText').textContent='Hazırlıq üçün 100 ərzaq lazımdır.';return}game.food-=100;game.xp=(game.xp||0)+20;save();paintResources();renderMode('hero')});
+   const skillInfo=document.createElement('div');skillInfo.style.cssText='margin-top:10px;padding:9px;border:1px solid #80633d;border-radius:7px;color:#e5d3ae;font-size:11px;line-height:1.6';skillInfo.innerHTML='<b style="color:#f0d39a">SƏRKƏRDƏ BACARIQLARI</b><br>⚔️ Döyüş nərəsi · Səviyyə 2: növbəti hücum +15% güc<br>🛡️ Polad iradə · Səviyyə 3: növbəti basqında +120 müdafiə';document.querySelector('#modalActions').appendChild(skillInfo);
+   const war=document.createElement('button');war.textContent=game.heroWarCry?'⚔️ Döyüş nərəsi aktivdir':'⚔️ Döyüş nərəsini hazırla · 120 qızıl';war.disabled=heroLevel<2||!!game.heroWarCry;war.onclick=()=>{if(game.gold<120){document.querySelector('#modalText').textContent='Bacarıq üçün 120 qızıl lazımdır.';return}game.gold-=120;game.heroWarCry=true;save();paintResources();renderMode('hero')};document.querySelector('#modalActions').appendChild(war);
+   const shield=document.createElement('button');shield.textContent=game.heroShield?'🛡️ Polad iradə aktivdir':'🛡️ Polad iradəni hazırla · 160 qızıl';shield.disabled=heroLevel<3||!!game.heroShield;shield.onclick=()=>{if(game.gold<160){document.querySelector('#modalText').textContent='Bacarıq üçün 160 qızıl lazımdır.';return}game.gold-=160;game.heroShield=true;save();paintResources();renderMode('hero')};document.querySelector('#modalActions').appendChild(shield);
  }else if(p==='alliance'){
    document.querySelector('#modalText').textContent='İttifaq sistemi hələ təkoyunçu prototipidir. Yerli sınaq ittifaqına qoşula bilərsən.';
    addAction('🛡️ Sınaq ittifaqına qoşul',()=>{game.alliance='Qartal Birliyi';save();document.querySelector('#modalText').textContent='Qartal Birliyinə qoşuldun!';document.querySelector('#modalTags').innerHTML='<span class="tag">Qartal Birliyi</span>'});
