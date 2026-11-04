@@ -188,6 +188,51 @@ gatehouse.position.set(0,0,14.05);scene.add(gatehouse);
 const castle=new THREE.Group();box(castle,0,0,0,6,4.2,5,stone);box(castle,0,4.2,0,4.8,.45,4,stone);box(castle,0,4.65,0,2.2,2.5,2.2,stone);
 for(const [x,z] of [[-2.5,-2],[2.5,-2],[-2.5,2],[2.5,2]]){cylinder(castle,x,3.1,z,.62,.72,2.1,stone,8);cone(castle,x,5.1,z,.78,1.6,roofBlue,8)}
 box(castle,0,0,2.55,1.5,2.6,.25,wood);box(castle,0,2.7,0,1.1,.25,1.1,gold);castle.position.set(0,.05,0);castle.userData={name:'Baş Qala',kind:'castle',level:1};scene.add(castle);
+
+ // Grand keep upgrade: layered stonework, tall lancet windows, crown battlements and royal standard.
+ const keepLight=mat(0xb9b4a5),keepShadow=mat(0x343d40),keepGlass=mat(0x253f55,.28),keepBanner=mat(0x173c68);
+ // Four massive corner buttresses visually anchor the keep to its foundations.
+ for(const [x,z] of [[-2.72,-2.2],[2.72,-2.2],[-2.72,2.2],[2.72,2.2]]){
+   box(castle,x,-.08,z,.52,3.55,.52,darkStone);
+   box(castle,x,3.35,z,.72,.22,.72,keepLight);
+   cone(castle,x,3.55,z,.46,.72,stone,4);
+ }
+ // Front entrance: deep shadowed arch, reinforced oak doors and broad ceremonial stairs.
+ box(castle,0,.02,2.72,1.82,2.7,.18,keepShadow);
+ box(castle,0,.02,2.84,1.42,2.45,.12,wood);
+ for(let x=-.52;x<=.53;x+=.26)box(castle,x,.08,2.92,.045,2.3,.035,gold);
+ box(castle,0,2.55,2.94,1.9,.16,.18,keepLight);
+ for(let n=0;n<5;n++)box(castle,0,-.12+n*.22,3.05+n*.38,2.65,.2,.62,keepLight);
+ // Tall blue lancet windows with gold mullions on the main tower.
+ for(const x of [-1.02,1.02]){
+   box(castle,x,4.8,1.14,.62,1.62,.12,keepShadow);
+   box(castle,x,4.82,1.22,.4,1.34,.045,keepGlass);
+   box(castle,x,4.82,1.26,.055,1.42,.035,gold);
+   box(castle,x,4.82,1.26,.44,.055,.035,gold);
+   cone(castle,x,5.62,1.18,.34,.42,keepLight,4);
+ }
+ // Battlement crown around the upper tower and smaller corner merlons.
+ for(let x=-1.95;x<=1.96;x+=.65){
+   box(castle,x,7.25,1.72,.38,.58,.42,keepLight);
+   box(castle,x,7.25,-1.72,.38,.58,.42,keepLight);
+ }
+ for(let z=-1.4;z<=1.41;z+=.65){
+   box(castle,-2.1,7.25,z,.42,.58,.38,keepLight);
+   box(castle,2.1,7.25,z,.42,.58,.38,keepLight);
+ }
+ // Four gold roof finials and a blue royal flag over the central tower.
+ for(const [x,z] of [[-2.5,-2],[2.5,-2],[-2.5,2],[2.5,2]]){
+   cylinder(castle,x,5.65,z,.045,.055,1.2,gold,6);
+   cone(castle,x,6.85,z,.16,.34,gold,6);
+ }
+ cylinder(castle,0,7.05,0,.055,.065,2.1,gold,8);
+ const royalFlag=new THREE.Mesh(new THREE.PlaneGeometry(1.25,.78),keepBanner);
+ royalFlag.position.set(.62,8.35,0);royalFlag.castShadow=true;castle.add(royalFlag);
+ const flagMark=new THREE.Mesh(new THREE.CircleGeometry(.19,8),gold);flagMark.position.set(.62,8.35,.025);castle.add(flagMark);
+ // Stone corner quoins and narrow decorative courses.
+ for(let y=.55;y<4;y+=.82)for(const x of [-3.03,3.03])for(const z of [-2.53,2.53])box(castle,x,y,z,.16,.12,.16,keepLight);
+ for(let x=-2.55;x<=2.56;x+=.62){box(castle,x,2.05,2.57,.38,.055,.045,keepLight);box(castle,x,3.9,-2.57,.38,.055,.045,keepLight)}
+
 // individual city buildings with separate silhouettes
 function house(x,z,name,kind='house',scale=1){const g=new THREE.Group();const w=kind==='hall'?3.8:2.7,d=kind==='hall'?3.1:2.5,h=kind==='stable'?1.8:2.2;
 box(g,0,0,0,w*scale,h*scale,d*scale,kind==='barracks'?stone:wood);
