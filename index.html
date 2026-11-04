@@ -355,7 +355,9 @@ for(let i=0;i<25;i++){const x=(Math.random()-.5)*35,z=(Math.random()-.5)*29;if(M
    box(scene,p[0],1.35,p[1],1.65,.22,1.65,wood);
    for(let q=-1;q<=1;q+=2)box(scene,p[0]+q*.62,1.55,p[1],.18,.48,1.65,stone);
  }
+window.__sceneAnimRefs={sheepFlock,farmFlock,marketCart};
 })();
+const {sheepFlock,farmFlock,marketCart}=window.__sceneAnimRefs;
 
 // Interactive defensive towers along the inner wall
 const defenseTowers=[];
