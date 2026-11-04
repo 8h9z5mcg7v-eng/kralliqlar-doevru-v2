@@ -244,6 +244,39 @@ for(const b of buildings){
 for(let i=0;i<4;i++){box(scene,11+i*.8,-.02,-11, .55,.12,2.7,mat(i%2?0x8d9a50:0xb39a5c))}
 cylinder(scene,-13,0,0,.8,.8,.35,stone,8);cylinder(scene,-13,.35,0,.5,.5,.2,water,12);box(scene,-13,1.1,0,.12,1.4,.12,wood);
 for(let i=0;i<30;i++){const a=i*2.399;const r=14+Math.random()*4;tree(Math.cos(a)*r,Math.sin(a)*r,.65+Math.random()*.6)}
+
+ // Expanded living outskirts: orchard rows, vegetable gardens, hay stacks and stone paths.
+ const orchardLeaf=mat(0x496a38),orchardLeaf2=mat(0x78934b),soilMat=mat(0x66523b),cropGold=mat(0xc3a34f),fenceMat=mat(0x503923);
+ function orchardTree(x,z,variant=0){
+   cylinder(scene,x,0,z,.13,.2,1.25,wood,7);
+   const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(.82,1),variant?orchardLeaf2:orchardLeaf);
+   crown.position.set(x,1.45,z);crown.scale.set(1,1.08,.92);crown.castShadow=true;scene.add(crown);
+   for(let k=0;k<5;k++){const fruit=new THREE.Mesh(new THREE.SphereGeometry(.095,7,6),cropGold);const a=k*2.4;fruit.position.set(x+Math.cos(a)*.58,1.25+(k%2)*.32,z+Math.sin(a)*.58);scene.add(fruit)}
+ }
+ for(let row=0;row<3;row++)for(let col=0;col<4;col++)orchardTree(-12+col*1.65,-10-row*1.7,(row+col)%2);
+ // Raised vegetable beds with visibly separated furrows and crop leaves.
+ for(let bed=0;bed<4;bed++){
+   const x=10.8+(bed%2)*2.2,z=-10.5+Math.floor(bed/2)*2.15;
+   box(scene,x,-.02,z,1.7,.18,1.55,soilMat);
+   for(let row=0;row<3;row++)for(let col=0;col<4;col++){
+     const sprout=new THREE.Group();
+     for(let side=-1;side<=1;side+=2){const leaf=new THREE.Mesh(new THREE.ConeGeometry(.13,.48,5),leafA);leaf.position.set(side*.11,.36,0);leaf.rotation.z=side*.5;sprout.add(leaf)}
+     sprout.position.set(x-.55+col*.36,.08,z-.42+row*.4);scene.add(sprout);
+   }
+ }
+ // Fenced hay and timber yards beside the workshops.
+ for(const [x,z] of [[-12,8],[12,-8]]){
+   for(let n=0;n<5;n++){box(scene,x-2+n,0,z-1,.1,.8,.1,fenceMat);box(scene,x-2+n,0,z+1,.1,.8,.1,fenceMat)}
+   box(scene,x, .62,z,3.9,.12,.12,wood);
+   for(let n=0;n<3;n++){const bale=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.75,7),cropGold);bale.rotation.z=Math.PI/2;bale.position.set(x-1+n*.9,.42,z);scene.add(bale)}
+ }
+ // Small roadside pennants mark the approach to the main gate.
+ for(const x of [-5.5,5.5]){
+   cylinder(scene,x,0,10,.045,.06,3.2,gold,6);
+   const flag=new THREE.Mesh(new THREE.PlaneGeometry(.78,.48),clothBlue);flag.position.set(x+.36,2.48,10);scene.add(flag);
+   const emblem=new THREE.Mesh(new THREE.CircleGeometry(.12,8),gold);emblem.position.set(x+.36,2.48,10.025);scene.add(emblem);
+ }
+
 // little rocks
 for(let i=0;i<25;i++){const x=(Math.random()-.5)*35,z=(Math.random()-.5)*29;if(Math.abs(x)<10&&Math.abs(z)<9)continue;const o=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+Math.random()*.35,0),stone);o.position.set(x,.05,z);o.castShadow=true;scene.add(o)}
 
