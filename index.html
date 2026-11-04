@@ -588,6 +588,29 @@ function showPanel(name,kind){
        document.querySelector('#modalTags').innerHTML='<span class="tag">Ticarət sayı: '+game.tradeCount+'</span>';
      };actions.appendChild(b);
    });
+   const caravanTitle=document.createElement('div');caravanTitle.style.cssText='width:100%;font-size:12px;color:#f0d39a;margin:12px 0 3px';caravanTitle.textContent='🐪 TİCARƏT KARVANI';actions.appendChild(caravanTitle);
+   const caravanInfo=document.createElement('div');caravanInfo.style.cssText='width:100%;font-size:11px;color:#d9c99f;line-height:1.6';actions.appendChild(caravanInfo);
+   const caravanButton=document.createElement('button');actions.appendChild(caravanButton);
+   const refreshCaravan=()=>{
+     const active=game.caravanReadyAt||0,now=Date.now();
+     if(active&&now<active){caravanInfo.textContent='Karvan yoldadır. Geri dönməsinə: '+Math.ceil((active-now)/1000)+' saniyə.';caravanButton.textContent='⏳ Karvan səfərdədir';caravanButton.disabled=true}
+     else if(active){caravanInfo.textContent='Karvan geri qayıtdı. Qəniməti götürə bilərsən.';caravanButton.textContent='📦 Karvanı qarşıla';caravanButton.disabled=false;caravanButton.onclick=()=>{
+       const reward=game.caravanReward||{gold:120,stone:100};
+       game.gold=(game.gold||0)+reward.gold;game.stone=(game.stone||0)+reward.stone;
+       game.caravanReadyAt=0;game.caravanReward=null;game.caravanTrips=(game.caravanTrips||0)+1;
+       save();paintResources();caravanInfo.textContent='Karvan gətirdi: '+reward.gold+' qızıl və '+reward.stone+' daş.';caravanButton.disabled=true;caravanButton.textContent='✅ Karvan qarşılandı';
+       document.querySelector('#modalTags').innerHTML='<span class="tag">Səfərlər: '+game.caravanTrips+'</span>';
+     }}
+     else{caravanInfo.textContent='Səfər xərci: 250 ərzaq və 120 taxta · 30 saniyə.';caravanButton.textContent='🐪 Karvanı yola sal';caravanButton.disabled=false;caravanButton.onclick=()=>{
+       if(game.food<250||game.wood<120){document.querySelector('#modalText').textContent='Karvan üçün 250 ərzaq və 120 taxta lazımdır.';return}
+       game.food-=250;game.wood-=120;
+       const marketLevel=game.levels.market||1;
+       game.caravanReward={gold:120+marketLevel*30,stone:100+marketLevel*20};
+       game.caravanReadyAt=Date.now()+30000;save();paintResources();refreshCaravan();
+     }}
+   };
+   refreshCaravan();
+   const caravanTimer=setInterval(()=>{if(!document.body.contains(caravanInfo)){clearInterval(caravanTimer);return}refreshCaravan()},1000);
  }
  document.querySelector('#modal').classList.add('show');
 }
