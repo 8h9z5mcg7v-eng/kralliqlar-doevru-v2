@@ -632,6 +632,9 @@ function renderMode(p){
     <g data-target="lake" style="cursor:pointer"><circle cx="90" cy="245" r="18" fill="#315e75" stroke="#e8d19a" stroke-width="3"/><text x="90" y="251" text-anchor="middle" font-size="18">🌊</text></g>
     <g data-target="ruins" style="cursor:pointer"><circle cx="330" cy="255" r="18" fill="#71634d" stroke="#e8d19a" stroke-width="3"/><text x="330" y="261" text-anchor="middle" font-size="18">🏚</text></g>
     <g data-target="fort" style="cursor:pointer"><circle cx="485" cy="250" r="18" fill="#696e70" stroke="#e8d19a" stroke-width="3"/><text x="485" y="256" text-anchor="middle" font-size="18">🏰</text></g><g data-target="rival" style="cursor:pointer"><circle cx="350" cy="72" r="20" fill="#842f2a" stroke="#f0c17b" stroke-width="3"/><text x="350" y="79" text-anchor="middle" font-size="20">♜</text></g>
+    <g data-target="rival2" style="cursor:pointer"><circle cx="455" cy="185" r="19" fill="#633d78" stroke="#e4c58c" stroke-width="3"/><text x="455" y="192" text-anchor="middle" font-size="20">♜</text></g>
+    <g data-target="rival3" style="cursor:pointer"><circle cx="205" cy="235" r="19" fill="#8b6031" stroke="#e4c58c" stroke-width="3"/><text x="205" y="242" text-anchor="middle" font-size="20">♜</text></g>
+    <g data-target="rival4" style="cursor:pointer"><circle cx="65" cy="165" r="19" fill="#49677b" stroke="#e4c58c" stroke-width="3"/><text x="65" y="172" text-anchor="middle" font-size="20">♜</text></g>
    </svg>
    <div style="display:flex;justify-content:space-between;font-size:10px;color:#d9c99f;margin:5px 1px"><span>⚑ Qızılı nişan — fəth edilmiş torpaq</span><span>Yol: şimal ticarət yolu</span></div>
    <p id="targetInfo" style="font-size:11px">Xəritədə nişanlardan birini seç.</p>`;
@@ -660,7 +663,7 @@ function renderMode(p){
      target=btn.dataset.target;
      document.querySelectorAll('#realmMap [data-target] circle').forEach(c=>c.setAttribute('stroke','#e8d19a'));
      btn.querySelector('circle').setAttribute('stroke','#fff');
-     document.querySelector('#targetInfo').textContent=({forest:'Qədim meşə · 260 taxta mükafatı.',camp:'Quldur düşərgəsi · 180 qızıl mükafatı.',mine:'Dəmir mədəni · 210 dəmir mükafatı.',lake:'Sakit göl · 280 ərzaq mükafatı.',ruins:'Qədim xarabalıq · 240 qızıl mükafatı.',fort:'Şimal qalası · 190 daş mükafatı.',rival:'Qara Qartal krallığı · rəqib hökmdar, müdafiə gücü '+(160+(game.rivalWins||0)*35+(game.raidsSurvived||0)*5)+'. Fəth edilən ərazilər: '+(game.conqueredTerritories||[]).length})[target];
+     document.querySelector('#targetInfo').textContent=({forest:'Qədim meşə · 260 taxta mükafatı.',camp:'Quldur düşərgəsi · 180 qızıl mükafatı.',mine:'Dəmir mədəni · 210 dəmir mükafatı.',lake:'Sakit göl · 280 ərzaq mükafatı.',ruins:'Qədim xarabalıq · 240 qızıl mükafatı.',fort:'Şimal qalası · 190 daş mükafatı.',rival:'Qara Qartal · müdafiə '+(160+(game.rivalWins||0)*35)+'.',rival2:'Şərq Qalxanı · müdafiə '+(230+(game.rival2Wins||0)*30)+'.',rival3:'Alov Tacı · müdafiə '+(310+(game.rival3Wins||0)*35)+'.',rival4:'Şimal Buynuzu · müdafiə '+(390+(game.rival4Wins||0)*40)+'.'})[target];
    }));
    addAction('🧭 Kəşfiyyat / yürüş',()=>{
      if(!target){document.querySelector('#targetInfo').textContent='Əvvəlcə xəritədə ərazi seç.';return}
@@ -678,29 +681,29 @@ function renderMode(p){
      setTimeout(()=>{game[key]=(game[key]||0)+value;game.xp=(game.xp||0)+10;game.lastMarch=target;save();paintResources();info.textContent='Yürüş tamamlandı! +'+value+' '+({wood:'taxta',stone:'daş',iron:'dəmir',gold:'qızıl',food:'ərzaq'}[key])+', +10 təcrübə.';if(marchButton)marchButton.disabled=false;},5000);
    });
    addAction('⚔️ Qara Qartala hücum',()=>{
-     if(!target||target!=='rival'){document.querySelector('#targetInfo').textContent='Əvvəlcə qırmızı Qara Qartal nişanını seç.';return}
+     if(!target||!['rival','rival2','rival3','rival4'].includes(target)){document.querySelector('#targetInfo').textContent='Əvvəlcə xəritədə rəqib qala seç.';return}
      const basePower=(game.infantry||0)+(game.archers||0)*1.2+(game.cavalry||0)*1.5;const warBonus=game.heroWarCry?1.15:1;const power=Math.round(basePower*getHeroBonus()*warBonus);game.heroWarCry=false;const cityDefense=getCityDefense();
      if(power<160){document.querySelector('#targetInfo').textContent='Qoşun gücün 160-dan azdır. Əvvəlcə ordu hazırla.';return}
      if(game.food<250){document.querySelector('#targetInfo').textContent='Hücum üçün 250 ərzaq lazımdır.';return}
      game.food-=250;save();paintResources();
      const info=document.querySelector('#targetInfo');
      info.innerHTML='<div class="battle-stage"><div class="battle-side">🛡️<b>SƏNİN ORDUN</b><small>'+power+' hücum gücü · '+cityDefense+' şəhər müdafiəsi</small></div><div class="battle-clash">⚔️</div><div class="battle-side enemy">🏰<b>QARA QARTAL</b><small>160 müdafiə</small></div></div><div class="battle-progress"><i></i></div><div style="text-align:center;color:#f0d39a">Qoşunlar döyüş meydanına irəliləyir...</div>';
-     const defense=160+(game.rivalWins||0)*35+(game.raidsSurvived||0)*5;
+     const rivalData={rival:{name:'Qara Qartal',base:160,step:35,reward:350},rival2:{name:'Şərq Qalxanı',base:230,step:30,reward:480},rival3:{name:'Alov Tacı',base:310,step:35,reward:650},rival4:{name:'Şimal Buynuzu',base:390,step:40,reward:850}}[target];const winKey=target+'Wins';const defense=rivalData.base+(game[winKey]||0)*rivalData.step+(game.raidsSurvived||0)*5;
      const roll=power*(.85+Math.random()*.3);
      const won=roll>=defense;
      const battleButton=document.querySelector('#modalActions button:last-child');if(battleButton)battleButton.disabled=true;
      setTimeout(()=>{
        if(won){
-         game.gold+=350;game.wood+=220;game.xp=(game.xp||0)+60;game.rivalWins=(game.rivalWins||0)+1;
+         game.gold+=rivalData.reward;game.wood+=220;game.xp=(game.xp||0)+60;game[winKey]=(game[winKey]||0)+1;
          game.conqueredTerritories=game.conqueredTerritories||[];
          const territoryNames=['Şimal sərhəd qalası','Qədim karvan yolu','Dəmir təpələri','Qartal keçidi','Köhnə istehkam'];
          const captured=territoryNames[(game.rivalWins-1)%territoryNames.length];
          if(!game.conqueredTerritories.includes(captured))game.conqueredTerritories.push(captured);
          game.alliancePoints=(game.alliancePoints||0)+(game.alliance==='Qartal Birliyi'?50:0);
-         info.innerHTML='<b style="color:#f0d39a">QƏLƏBƏ! ƏRAZİ FƏTH EDİLDİ</b><br>'+captured+' artıq krallığının nəzarətindədir.<br>+350 qızıl · +220 taxta · +60 təcrübə'+(game.alliance==='Qartal Birliyi'?' · +50 ittifaq xalı':'');
-         recordBattle('Qələbə','Qara Qartal',captured+' fəth edildi. 350 qızıl, 220 taxta və 60 təcrübə qazanıldı.');
+         info.innerHTML='<b style="color:#f0d39a">QƏLƏBƏ! ƏRAZİ FƏTH EDİLDİ</b><br>'+captured+' artıq krallığının nəzarətindədir.<br>+'+rivalData.reward+' qızıl · +220 taxta · +60 təcrübə'+(game.alliance==='Qartal Birliyi'?' · +50 ittifaq xalı':'');
+         recordBattle('Qələbə',rivalData.name,captured+' fəth edildi. '+rivalData.reward+' qızıl, 220 taxta və 60 təcrübə qazanıldı.');
        }
-       else{game.infantry=Math.max(0,game.infantry-Math.ceil(game.infantry*.08));game.archers=Math.max(0,game.archers-Math.ceil(game.archers*.06));game.cavalry=Math.max(0,game.cavalry-Math.ceil(game.cavalry*.1));game.xp=(game.xp||0)+12;info.textContent='MƏĞLUBİYYƏT. Qoşunların itki verdi. Qəhrəman +12 təcrübə qazandı.';recordBattle('Məğlubiyyət','Qara Qartal','Hücum dəf edildi. Qoşunların itki verdi.')}
+       else{game.infantry=Math.max(0,game.infantry-Math.ceil(game.infantry*.08));game.archers=Math.max(0,game.archers-Math.ceil(game.archers*.06));game.cavalry=Math.max(0,game.cavalry-Math.ceil(game.cavalry*.1));game.xp=(game.xp||0)+12;info.textContent='MƏĞLUBİYYƏT. Qoşunların itki verdi. Qəhrəman +12 təcrübə qazandı.';recordBattle('Məğlubiyyət',rivalData.name,'Hücum dəf edildi. Qoşunların itki verdi.')}
        game.troops=game.infantry+game.archers+game.cavalry;save();paintResources();if(battleButton)battleButton.disabled=false;
      },2600);
    });
