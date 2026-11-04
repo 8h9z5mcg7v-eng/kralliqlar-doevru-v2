@@ -581,12 +581,15 @@ function collectResources(){
 document.querySelector('#close').onclick=()=>document.querySelector('#modal').classList.remove('show');
 function addAction(label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=fn;document.querySelector('#modalActions').appendChild(b)}
 function trainArmy(type){
- const costs={infantry:{wood:45,food:65},archers:{wood:75,food:55},cavalry:{wood:90,food:110,iron:25}};
- const counts={infantry:game.infantry||0,archers:game.archers||0,cavalry:game.cavalry||0};
- const c=costs[type],enough=Object.entries(c).every(([k,v])=>(game[k]||0)>=v);
+ const levels={infantry:game.levels.barracks||1,archers:game.levels.archery||1,cavalry:game.levels.stable||1};
+ const base={infantry:{wood:45,food:65},archers:{wood:75,food:55},cavalry:{wood:90,food:110,iron:25}};
+ const level=levels[type]||1,amount=10+Math.min(20,(level-1)*5);
+ const costs=Object.fromEntries(Object.entries(base[type]).map(([k,v])=>[k,Math.ceil(v*(1+(level-1)*.12))]));
+ const enough=Object.entries(costs).every(([k,v])=>(game[k]||0)>=v);
  if(!enough){document.querySelector('#modalText').textContent='Təlim üçün resurslar kifayət etmir.';return}
- Object.entries(c).forEach(([k,v])=>game[k]-=v);game[type]=counts[type]+10;game.troops=(game.infantry||0)+(game.archers||0)+(game.cavalry||0);save();paintResources();
- document.querySelector('#modalText').textContent='10 yeni '+({infantry:'piyada',archers:'oxatan',cavalry:'süvari'}[type])+' döyüşçü hazırlandı. Ümumi qoşun: '+game.troops+'.';
+ Object.entries(costs).forEach(([k,v])=>game[k]-=v);
+ game[type]=(game[type]||0)+amount;game.troops=(game.infantry||0)+(game.archers||0)+(game.cavalry||0);save();paintResources();
+ document.querySelector('#modalText').textContent=amount+' yeni '+({infantry:'piyada',archers:'oxatan',cavalry:'süvari'}[type])+' hazırlandı. Təlim binası səviyyəsi: '+level+'. Ümumi qoşun: '+game.troops+'.';
 }
 function recordBattle(result,enemy,details){
  game.battleReports=game.battleReports||[];
@@ -597,7 +600,7 @@ function renderMode(p){
  const a=document.querySelector('#modalActions');a.innerHTML='';
  if(p==='army'){
    game.infantry??=60;game.archers??=40;game.cavalry??=20;game.troops=game.infantry+game.archers+game.cavalry;
-   document.querySelector('#modalText').textContent='Qoşunların: '+game.infantry+' piyada · '+game.archers+' oxatan · '+game.cavalry+' süvari. Təlim üçün resurs sərf olunur.';
+   document.querySelector('#modalText').textContent='Qoşunların: '+game.infantry+' piyada · '+game.archers+' oxatan · '+game.cavalry+' süvari. Kazarma S'+(game.levels.barracks||1)+' · Oxçuluq S'+(game.levels.archery||1)+' · Tövlə S'+(game.levels.stable||1)+'. Hər səviyyə təlim dəstəsini böyüdür.';
    document.querySelector('#modalTags').innerHTML='<span class="tag">Cəmi '+game.troops+' döyüşçü</span><span class="tag">Təlim düşərgəsi</span>';
    addAction('🗡️ +10 Piyada',()=>trainArmy('infantry'));addAction('🏹 +10 Oxatan',()=>trainArmy('archers'));addAction('🐎 +10 Süvari',()=>trainArmy('cavalry'));
  }else if(p==='world'){
