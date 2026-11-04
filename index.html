@@ -305,7 +305,7 @@ for(let i=0;i<30;i++){const a=i*2.399;const r=14+Math.random()*4;tree(Math.cos(a
    box(scene,x,-.02,z,1.7,.18,1.55,soilMat);
    for(let row=0;row<3;row++)for(let col=0;col<4;col++){
      const sprout=new THREE.Group();
-     for(let side=-1;side<=1;side+=2){const leaf=new THREE.Mesh(new THREE.ConeGeometry(.13,.48,5),leafA);leaf.position.set(side*.11,.36,0);leaf.rotation.z=side*.5;sprout.add(leaf)}
+     for(let side=-1;side<=1;side+=2){const leaf=new THREE.Mesh(new THREE.ConeGeometry(.13,.48,5),mat(0x526c3d));leaf.position.set(side*.11,.36,0);leaf.rotation.z=side*.5;sprout.add(leaf)}
      sprout.position.set(x-.55+col*.36,.08,z-.42+row*.4);scene.add(sprout);
    }
  }
