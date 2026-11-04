@@ -1426,7 +1426,6 @@ for(const [x,z] of [[-3.35,-2.65],[3.35,-2.65],[-3.35,2.65],[3.35,2.65]]){
   box(castle,x,3.72,z,.55,.18,.55,citadelTrim);
 }
 
-function animate(){
 // VISUAL PASS: fortified entrance bridge, outer approach and environmental dressing
 const bridgeOak=mat(0x65452d),bridgeEdge=mat(0x3c3028),bridgeStone=mat(0xaaa391),bridgeGold=mat(0xc9a45d);
 const bridgeGroup=new THREE.Group();
@@ -1494,7 +1493,39 @@ for(const x of [-2.12,2.12]){
  boss.position.set(x,2.0,15.16);scene.add(boss);
 }
 
-requestAnimationFrame(animate);const t=performance.now()*.001;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
+
+// ROYAL HERO MODEL: standalone Three.js commander on the city plaza
+const heroModel=new THREE.Group();
+const heroArmor=mat(0x39434b),heroSteel=mat(0x9ba7ad),heroGold=mat(0xd0aa5c),heroCape=mat(0x173e6c),heroSkin=mat(0xc99470),heroLeather=mat(0x493324);
+function heroPart(parent,geo,material,x,y,z,sx=1,sy=1,sz=1){
+ const mesh=new THREE.Mesh(geo,material);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+}
+heroPart(heroModel,new THREE.CylinderGeometry(.34,.43,.9,8),heroArmor,0,1.42,0);
+heroPart(heroModel,new THREE.SphereGeometry(.27,12,10),heroSkin,0,2.08,0,1,.98,.92);
+heroPart(heroModel,new THREE.ConeGeometry(.32,.42,8),heroSteel,0,2.42,0);
+heroPart(heroModel,new THREE.BoxGeometry(.58,.12,.38),heroGold,0,2.25,.015);
+heroPart(heroModel,new THREE.BoxGeometry(.58,.08,.12),heroArmor,0,1.92,.25);
+heroPart(heroModel,new THREE.BoxGeometry(.58,.88,.08),heroCape,0,1.42,-.28,.95,1,.7);
+for(const x of [-.22,.22]){
+ heroPart(heroModel,new THREE.CylinderGeometry(.105,.13,.68,8),heroArmor,x,.68,0);
+ heroPart(heroModel,new THREE.SphereGeometry(.14,8,7),heroSteel,x,.31,0,1,.72,1);
+ heroPart(heroModel,new THREE.CylinderGeometry(.12,.15,.65,8),heroArmor,x,1.43,.02);
+ heroPart(heroModel,new THREE.SphereGeometry(.16,8,7),heroGold,x,1.72,.02);
+}
+const heroSword=new THREE.Group();
+heroPart(heroSword,new THREE.CylinderGeometry(.035,.045,.88,6),heroSteel,0,.55,0);
+heroPart(heroSword,new THREE.BoxGeometry(.38,.09,.12),heroGold,0,.12,0);
+heroPart(heroSword,new THREE.CylinderGeometry(.055,.055,.28,6),heroLeather,0,-.05,0);
+heroSword.position.set(.48,1.25,.12);heroSword.rotation.z=-.22;heroModel.add(heroSword);
+const heroShield=new THREE.Group();
+heroPart(heroShield,new THREE.CylinderGeometry(.34,.28,.12,6),heroCape,0,0,0,1,1,.55);
+heroPart(heroShield,new THREE.SphereGeometry(.12,8,8),heroGold,0,0,.07);
+heroShield.position.set(-.48,1.25,.18);heroModel.add(heroShield);
+heroModel.position.set(-4.2,.04,7.1);heroModel.rotation.y=-.18;scene.add(heroModel);
+window.__royalHeroModel=heroModel;
+
+function animate(){
+requestAnimationFrame(animate);const t=performance.now()*.001;heroModel.position.y=.04+Math.sin(t*1.8)*.035;heroSword.rotation.z=-.22+Math.sin(t*1.8)*.045;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
 </body></html>
