@@ -443,6 +443,66 @@ function cityBuilding(x,z,label,kind,scale=1,accent=mRoof){
  if(['forge','hall','temple'].includes(kind)){slab(g,w*.3,h+.75,-d*.22,.48,1.2,.48,mStoneDark);slab(g,w*.3,h+1.38,-d*.22,.58,.16,.58,mStone)}
  slab(g,w*.32,1.55,d/2+.18,.82,.36,.12,kind==='market'?mGold:mWood);
  for(let k=0;k<3;k++)slab(g,w*.32-.23+k*.23,1.56,d/2+.255,.035,.22,.025,mGold);
+
+ // Distinct silhouettes and functional architecture for each city building.
+ if(kind==='barracks'||kind==='hall'){
+   // fortified upper watch platform and crenellated roofline
+   slab(g,0,h+1.18,0,w*.78,.28,d*.72,mStoneDark);
+   for(let k=-2;k<=2;k++)slab(g,k*w*.14,h+1.42,-d*.36,.32,.42,.32,mStoneLit);
+   for(let k=-1;k<=1;k++)slab(g,k*w*.2,h+1.42,d*.36,.32,.42,.32,mStoneLit);
+   peak(g,0,h+1.34,0,.72,.7,kind==='hall'?mRoofGold:mRoof,4);
+ }else if(kind==='stable'){
+   // long stable wing, hay loft vents and hitching rails
+   slab(g,-w*.58,.62,-.12,w*.28,1.55,d*.82,mPlaster2);
+   roofGable(g,w*.3,d*.86,h+.5,mRoofGold);
+   for(let k=-2;k<=2;k++)slab(g,k*.48,.78,d*.5,.09,.55,.09,mWood);
+   for(const xx of [-w*.34,w*.34]){post(g,xx,2.35,-d*.2,.12,.7,mGold);peak(g,xx,2.65,-d*.2,.22,.38,mRoof2,4)}
+ }else if(kind==='archery'){
+   // raised archer's lookout with a timber stair and target shields
+   post(g,0,h+.5,0,.72,1.35,mStoneDark);
+   slab(g,0,h+1.18,0,2.25,.22,2.15,mWood);
+   for(let k=-2;k<=2;k++)slab(g,k*.42,h+1.48,-.88,.22,.42,.22,mStoneLit);
+   peak(g,0,h+1.4,0,1.35,.95,mRoof2,8);
+   for(let k=-1;k<=1;k++){const target=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.1,12),mGold);target.rotation.x=Math.PI/2;target.position.set(k*.78,1.25,d*.58);g.add(target)}
+ }else if(kind==='store'||kind==='farm'){
+   // granary silos and ventilated grain loft
+   for(const xx of [-w*.34,w*.34]){
+     post(g,xx,h+.15,-d*.2,.48,1.65,mPlaster2);
+     peak(g,xx,h+1.8,-d*.2,.55,.62,mRoofGold,8);
+     slab(g,xx,h+.35,d*.42,.12,.65,.12,mBeam);
+   }
+   slab(g,0,h+1.22,0,w*.65,.16,d*.65,mStoneDark);
+ }else if(kind==='forge'){
+   // tall forge chimney, glowing furnace mouth and iron hammer sign
+   const fire=new THREE.Mesh(new THREE.SphereGeometry(.25,10,8),new THREE.MeshStandardMaterial({color:0xff7a24,emissive:0xd9470b,emissiveIntensity:1.3}));
+   fire.position.set(-w*.28,.98,d*.59);g.add(fire);
+   slab(g,-w*.28,1.65,d*.6,.72,.16,.2,mIron);
+   post(g,w*.3,h+.8,-d*.22,.32,1.7,mStoneDark);
+   slab(g,w*.3,h+1.7,-d*.22,.68,.18,.68,mStone);
+   const hammer=slab(g,w*.32,2.12,d*.61,.72,.14,.12,mIron);hammer.rotation.z=-.35;
+ }else if(kind==='market'){
+   // colorful awning and open trading arcade
+   for(let k=0;k<4;k++){
+     const awning=slab(g,-w*.36+k*.72,2.25,d*.62,.68,.12,.92,k%2?mRoof2:mRoof);
+     awning.rotation.x=-.12;
+     post(g,-w*.36+k*.72,1.7,d*.82,.055,.85,mWood);
+   }
+   for(let k=0;k<3;k++)slab(g,-.55+k*.55,.68,d*.68,.38,.34,.34,k%2?mGold:mWood);
+ }else if(kind==='temple'){
+   // stepped sanctuary, columns and a gilded lantern cupola
+   slab(g,0,h+.65,0,w*.72,.32,d*.72,mStoneDark);
+   for(const xx of [-w*.3,w*.3])for(const zz of [-d*.28,d*.28])post(g,xx,h+.78,zz,.16,1.45,mStoneLit);
+   peak(g,0,h+1.95,0,.9,1.25,mRoofGold,8);
+   const halo=new THREE.Mesh(new THREE.TorusGeometry(.43,.045,8,20),mGold);halo.rotation.x=Math.PI/2;halo.position.set(0,h+2.65,0);g.add(halo);
+ }else if(kind==='lumber'){
+   // stacked timber store and sawmill racks
+   for(let k=0;k<5;k++){const log=post(g,-w*.38+k*.42,.58,-d*.62,.12,.95,mWood);log.rotation.z=Math.PI/2}
+   for(let k=0;k<3;k++)slab(g,w*.38,.75+k*.27,-d*.52,.82,.2,.82,mBeam);
+ }
+ // stone steps, roof ridge crest and heraldic plaque make the entrance readable
+ for(let k=0;k<3;k++)slab(g,0,.12+k*.12,d*.5+.32+k*.13,1.12,.12,.42,mStoneLit);
+ const crest=new THREE.Mesh(new THREE.OctahedronGeometry(.22,0),mGold);crest.position.set(0,h+1.62,d*.12);g.add(crest);
+
  g.position.set(x,0,z);g.userData={name:label,kind};city.add(g);return g;
 }
 // broad raised terrain, grass terraces and cobbled lanes
