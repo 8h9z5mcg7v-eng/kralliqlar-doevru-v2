@@ -590,6 +590,13 @@ function showPanel(name,kind){
    });
    const caravanTitle=document.createElement('div');caravanTitle.style.cssText='width:100%;font-size:12px;color:#f0d39a;margin:12px 0 3px';caravanTitle.textContent='🐪 TİCARƏT KARVANI';actions.appendChild(caravanTitle);
    const caravanInfo=document.createElement('div');caravanInfo.style.cssText='width:100%;font-size:11px;color:#d9c99f;line-height:1.6';actions.appendChild(caravanInfo);
+   game.caravanRouteLevel??=1;
+   const routeTitle=document.createElement('div');routeTitle.style.cssText='width:100%;font-size:12px;color:#f0d39a;margin:10px 0 3px';routeTitle.textContent='🛤️ TİCARƏT YOLUNUN TƏHLÜKƏSİZLİYİ';actions.appendChild(routeTitle);
+   const routeInfo=document.createElement('div');routeInfo.style.cssText='width:100%;font-size:11px;color:#d9c99f;line-height:1.5';actions.appendChild(routeInfo);
+   const routeButton=document.createElement('button');actions.appendChild(routeButton);
+   const routeLevel=()=>game.caravanRouteLevel||1;
+   const refreshRoute=()=>{const lv=routeLevel(),cost={wood:350*lv,stone:220*lv,gold:90*lv};routeInfo.textContent='Ticarət yolu · Səviyyə '+lv+'/5. Hər səviyyə pusqu riskini 5% azaldır və karvan mükafatını 8% artırır.';if(lv>=5){routeButton.textContent='✓ Ticarət yolu maksimum səviyyədədir';routeButton.disabled=true}else{routeButton.textContent='🧱 Yolu möhkəmləndir · '+cost.wood+' taxta, '+cost.stone+' daş, '+cost.gold+' qızıl';routeButton.disabled=false;routeButton.onclick=()=>{if(game.wood<cost.wood||game.stone<cost.stone||game.gold<cost.gold){document.querySelector('#modalText').textContent='Ticarət yolunu möhkəmləndirmək üçün resurslar çatmır.';return}game.wood-=cost.wood;game.stone-=cost.stone;game.gold-=cost.gold;game.caravanRouteLevel=lv+1;save();paintResources();refreshRoute();}}};
+   refreshRoute();
    const escortTitle=document.createElement('div');escortTitle.style.cssText='width:100%;font-size:12px;color:#f0d39a;margin:8px 0 2px';escortTitle.textContent='🛡️ KARVAN MÜHAFİZƏSİ';actions.appendChild(escortTitle);
    const escortInfo=document.createElement('div');escortInfo.style.cssText='width:100%;font-size:11px;color:#d9c99f';actions.appendChild(escortInfo);
    const escortChoices=[{id:'none',label:'Mühafizəsiz',type:null,count:0,power:0},{id:'infantry',label:'10 piyada',type:'infantry',count:10,power:100},{id:'archers',label:'10 oxatan',type:'archers',count:10,power:130},{id:'cavalry',label:'5 süvari',type:'cavalry',count:5,power:150}];
@@ -616,11 +623,12 @@ function showPanel(name,kind){
        if(escort.type&&(game[escort.type]||0)<escort.count){document.querySelector('#modalText').textContent='Seçilmiş mühafizə üçün kifayət qədər qoşun yoxdur.';return}
        game.food-=250;game.wood-=120;
        if(escort.type)game[escort.type]-=escort.count;
-       const marketLevel=game.levels.market||1;
-       const ambush=Math.random()<.38,threat=90+marketLevel*12+Math.floor(Math.random()*90);
-       const defended=!ambush||escort.power>=threat;
-       const rewardScale=ambush&&!defended?.45:1;
-       game.caravanReward={gold:Math.floor((120+marketLevel*30)*rewardScale),stone:Math.floor((100+marketLevel*20)*rewardScale)};
+       const marketLevel=game.levels.market||1,routeLv=routeLevel();
+       const ambush=Math.random()<Math.max(.08,.38-(routeLv-1)*.05),threat=Math.max(45,90+marketLevel*12-(routeLv-1)*12+Math.floor(Math.random()*90));
+       const garrisonPower=Object.values(game.towerArchers||{}).reduce((sum,n)=>sum+(n||0)*5,0);
+       const defended=!ambush||escort.power+garrisonPower>=threat;
+       const rewardScale=ambush&&!defended?.45:1,routeBonus=1+(routeLv-1)*.08;
+       game.caravanReward={gold:Math.floor((120+marketLevel*30)*rewardScale*routeBonus),stone:Math.floor((100+marketLevel*20)*rewardScale*routeBonus)};
        game.caravanEscortReturn={type:escort.type,count:escort.count,loss:ambush&&!defended?Math.max(1,Math.ceil(escort.count*.2)):0};
        game.caravanAmbush=ambush;game.caravanDefended=defended;game.caravanThreat=threat;
        game.caravanReadyAt=Date.now()+30000;save();paintResources();refreshCaravan();
