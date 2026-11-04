@@ -1426,7 +1426,75 @@ for(const [x,z] of [[-3.35,-2.65],[3.35,-2.65],[-3.35,2.65],[3.35,2.65]]){
   box(castle,x,3.72,z,.55,.18,.55,citadelTrim);
 }
 
-function animate(){requestAnimationFrame(animate);const t=performance.now()*.001;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
+function animate(){
+// VISUAL PASS: fortified entrance bridge, outer approach and environmental dressing
+const bridgeOak=mat(0x65452d),bridgeEdge=mat(0x3c3028),bridgeStone=mat(0xaaa391),bridgeGold=mat(0xc9a45d);
+const bridgeGroup=new THREE.Group();
+// Timber drawbridge aligned with the southern gate, spanning the defensive moat.
+box(bridgeGroup,0,0,0,4.35,.28,4.2,bridgeOak);
+for(let z=-1.75;z<=1.76;z+=.48){
+  box(bridgeGroup,0,.145,z,4.28,.035,.035,bridgeEdge);
+}
+for(const x of [-2.02,2.02]){
+  box(bridgeGroup,x,.48,0,.16,.72,4.1,bridgeEdge);
+  for(let z=-1.72;z<=1.73;z+=.86){
+    box(bridgeGroup,x,.9,z,.18,.55,.18,bridgeGold);
+  }
+}
+bridgeGroup.position.set(0,-.03,15.65);scene.add(bridgeGroup);
+// Stone abutments and short approach paving make the gate read as a connected structure.
+for(const x of [-2.55,2.55]){
+  box(scene,x,-.02,14.95,.52,.5,1.25,bridgeStone);
+  box(scene,x,-.02,17.2,.52,.5,.85,bridgeStone);
+}
+box(scene,0,-.12,17.55,6.2,.12,1.6,earth);
+box(scene,0,-.055,17.55,4.5,.08,1.15,mat(0xb6a17a));
+// Ornamental gate standards with layered blue-and-gold pennants.
+function entrancePennant(x,z,turn){
+ const g=new THREE.Group();
+ cylinder(g,0,0,0,.045,.055,3.15,bridgeGold,8);
+ const cloth=new THREE.Mesh(new THREE.PlaneGeometry(.82,.58),mat(0x173d69));
+ cloth.position.set(.42,2.45,0);cloth.rotation.y=turn;g.add(cloth);
+ const emblem=new THREE.Mesh(new THREE.CircleGeometry(.12,8),bridgeGold);
+ emblem.position.set(.42,2.45,.025);g.add(emblem);
+ g.position.set(x,0,z);scene.add(g);
+}
+entrancePennant(-3.45,12.15,.12);entrancePennant(3.45,12.15,-.12);
+// Gate-side lantern pillars, with warm emissive glass and metal caps.
+for(const x of [-4.1,4.1]){
+ const p=new THREE.Group();
+ box(p,0,0,0,.34,1.45,.34,bridgeStone);
+ box(p,0,1.43,0,.48,.12,.48,bridgeGold);
+ const glass=new THREE.Mesh(new THREE.BoxGeometry(.24,.38,.24),new THREE.MeshStandardMaterial({color:0xffbd68,emissive:0xff8b32,emissiveIntensity:1.35}));
+ glass.position.y=1.72;p.add(glass);
+ cone(p,0,1.98,0,.31,.22,bridgeGold,4);
+ p.position.set(x,0,11.65);scene.add(p);
+ const light=new THREE.PointLight(0xffa34a,.5,5);light.position.set(x,1.85,11.65);scene.add(light);
+}
+// Outer approach stones and low boundary markers add scale without crowding the buildings.
+for(let i=0;i<7;i++){
+ const x=-6+i*2;
+ box(scene,x,-.04,18.45,.12,.22,.12,bridgeStone);
+}
+for(const [x,z] of [[-18,-10],[-18,9],[18,-9],[18,10]]){
+ const rock=new THREE.Group();
+ const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.72,0),mat(0x77796f));
+ r.position.set(0,.12,0);r.scale.set(1.35,.72,.9);r.rotation.y=(x+z)*.08;rock.add(r);
+ rock.position.set(x,0,z);scene.add(rock);
+ for(let k=0;k<3;k++){
+  const shrub=new THREE.Mesh(new THREE.SphereGeometry(.42,7,6),mat(k===1?0x405b3b:0x526c43));
+  shrub.position.set((k-1)*.5,.23,(k%2)*.28);shrub.scale.set(1,.75,1);rock.add(shrub);
+ }
+}
+// Small heraldic shields on the outer gate piers.
+for(const x of [-2.12,2.12]){
+ const shield=new THREE.Mesh(new THREE.CylinderGeometry(.38,.28,.09,6),mat(0x183d68));
+ shield.rotation.x=Math.PI/2;shield.position.set(x,2.0,15.08);scene.add(shield);
+ const boss=new THREE.Mesh(new THREE.SphereGeometry(.12,8,8),bridgeGold);
+ boss.position.set(x,2.0,15.16);scene.add(boss);
+}
+
+requestAnimationFrame(animate);const t=performance.now()*.001;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
 </body></html>
