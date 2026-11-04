@@ -512,6 +512,45 @@ slab(city,0,-.37,0,9,.12,8,mPathEdge);slab(city,0,-.29,0,8.4,.1,7.4,mPath);
 // perimeter walls, gatehouse and eight crenellated towers
 function cityWall(x,z,w,d){slab(city,x,0,z,w,3.05,d,mStone);slab(city,x,3.02,z,w+.12,.28,d+.12,mStoneDark);const n=Math.floor((w+d)*.42);for(let j=0;j<n;j++){const t=j/(n-1);if(w>d){slab(city,x-w/2+t*w,3.28,z,.48,.55,d+.18,mStoneLit);slab(city,x-w/2+t*w,3.28,z,.48,.55,d+.18,mStoneLit)}else slab(city,x,3.28,z-d/2+t*d,w+.18,.55,.48,mStoneLit)}}
 cityWall(0,-16.1,37,.9);cityWall(0,16.1,37,.9);cityWall(-18.1,0,.9,31.5);cityWall(18.1,0,.9,31.5);
+
+ // Defensive wall pass: walkable parapets, stone buttresses and arrow slits.
+ (()=>{
+   const merlonMat=new THREE.MeshStandardMaterial({color:0xaaa99c,roughness:.94});
+   const slitMat=new THREE.MeshStandardMaterial({color:0x263238,roughness:1});
+   const walkMat=new THREE.MeshStandardMaterial({color:0x6e7069,roughness:1});
+   // Continuous inner patrol walkways behind the battlements.
+   slab(city,0,3.13,-15.35,35.6,.18,.72,walkMat);
+   slab(city,0,3.13,15.35,35.6,.18,.72,walkMat);
+   slab(city,-17.35,3.13,0,.72,.18,29.8,walkMat);
+   slab(city,17.35,3.13,0,.72,.18,29.8,walkMat);
+   // Regular crenels, separated enough to read as a real defensive wall.
+   for(let x=-16.2;x<=16.21;x+=1.55){
+     for(const z of [-16.1,16.1]){
+       slab(city,x,3.45,z,.62,.78,1.04,merlonMat);
+       slab(city,x,3.02,z,.8,.16,1.12,mStoneDark);
+     }
+   }
+   for(let z=-13.8;z<=13.81;z+=1.55){
+     for(const x of [-18.1,18.1]){
+       slab(city,x,3.45,z,1.04,.78,.62,merlonMat);
+       slab(city,x,3.02,z,1.12,.16,.8,mStoneDark);
+     }
+   }
+   // Reinforced vertical piers and narrow arrow loops on all four sides.
+   for(let x=-14;x<=14;x+=4.65)for(const z of [-16.1,16.1]){
+     slab(city,x,1.45,z,.42,2.9,1.12,mStoneDark);
+     slab(city,x,1.55,z+(z<0?.58:-.58),.16,.92,.08,slitMat);
+   }
+   for(let z=-12;z<=12;z+=4.65)for(const x of [-18.1,18.1]){
+     slab(city,x,1.45,z,1.12,2.9,.42,mStoneDark);
+     slab(city,x+(x<0?.58:-.58),1.55,z,.08,.92,.16,slitMat);
+   }
+   // Small stone stair landings connect the courtyard to the wall walk.
+   for(const [x,z] of [[-12,-15.1],[12,-15.1],[-12,15.1],[12,15.1]]){
+     for(let n=0;n<4;n++)slab(city,x,0.25+n*.7,z+n*.2,1.15,.22,.58,mStoneLit);
+   }
+ })();
+
 function cityTower(x,z,idx){const g=new THREE.Group();post(g,0,0,0,1.12,3.8,mStone);post(g,0,3.6,0,1.25,.28,mStoneDark);peak(g,0,3.85,0,1.48,2.15,idx%2?mRoof2:mRoof,8);for(let k=0;k<8;k++){const a=k*Math.PI/4;slab(g,Math.cos(a)*.98,3.9,Math.sin(a)*.98,.28,.5,.28,mStoneLit)}g.position.set(x,0,z);g.userData={name:'Müdafiə qülləsi '+idx,kind:'defenseTower'};city.add(g);defenseTowers.push(g)}
 [[-18,-16],[0,-16],[18,-16],[-18,0],[18,0],[-18,16],[0,16],[18,16]].forEach((p,i)=>cityTower(p[0],p[1],i+1));
 // grand gate with portcullis and twin roofed towers
