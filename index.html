@@ -550,7 +550,7 @@ function upgradeSelected(){
  if(game.wood<cost.wood||game.stone<cost.stone||game.iron<cost.iron){
    document.querySelector('#modalText').textContent='Resurslar kifayət etmir. Resurs topladıqdan sonra yenidən cəhd et.';return;
  }
- game.wood-=cost.wood;game.stone-=cost.stone;game.iron-=cost.iron;game.levels[k]=lv+1;window.__cityUpgradeVisual?.(k,lv+1);save();paintResources();
+ game.wood-=cost.wood;game.stone-=cost.stone;game.iron-=cost.iron;game.levels[k]=lv+1;game.questBuilds=(game.questBuilds||0)+1;window.__cityUpgradeVisual?.(k,lv+1);save();paintResources();
  document.querySelector('#modalText').textContent=selectedBuilding.name+' '+(lv+1)+'-ci səviyyəyə yüksəldildi!';
  document.querySelector('#modalTags').innerHTML='<span class="tag">Səviyyə '+(lv+1)+'</span><span class="tag">Yeniləndi</span>';
 }
@@ -578,7 +578,7 @@ function getCityDefense(){
 }
 
 function collectResources(){
- game.wood+=250;game.stone+=160;game.iron+=80;game.gold+=35;save();paintResources();
+ game.wood+=250;game.stone+=160;game.iron+=80;game.gold+=35;game.questCollects=(game.questCollects||0)+1;save();paintResources();
  document.querySelector('#modalText').textContent='Resurs anbarına əlavə edildi: 250 taxta, 160 daş, 80 dəmir və 35 qızıl.';
 }
 document.querySelector('#close').onclick=()=>document.querySelector('#modal').classList.remove('show');
@@ -591,7 +591,7 @@ function trainArmy(type){
  const enough=Object.entries(costs).every(([k,v])=>(game[k]||0)>=v);
  if(!enough){document.querySelector('#modalText').textContent='Təlim üçün resurslar kifayət etmir.';return}
  Object.entries(costs).forEach(([k,v])=>game[k]-=v);
- game[type]=(game[type]||0)+amount;game.troops=(game.infantry||0)+(game.archers||0)+(game.cavalry||0);save();paintResources();
+ game[type]=(game[type]||0)+amount;game.questTraining=(game.questTraining||0)+1;game.troops=(game.infantry||0)+(game.archers||0)+(game.cavalry||0);save();paintResources();
  document.querySelector('#modalText').textContent=amount+' yeni '+({infantry:'piyada',archers:'oxatan',cavalry:'süvari'}[type])+' hazırlandı. Təlim binası səviyyəsi: '+level+'. Ümumi qoşun: '+game.troops+'.';
 }
 function getHeroLevel(){return Math.max(1,1+Math.floor((game.xp||0)/100))}
@@ -715,8 +715,12 @@ function renderMode(p){
    document.querySelector('#modalText').textContent='İttifaq sistemi hələ təkoyunçu prototipidir. Yerli sınaq ittifaqına qoşula bilərsən.';
    addAction('🛡️ Sınaq ittifaqına qoşul',()=>{game.alliance='Qartal Birliyi';save();document.querySelector('#modalText').textContent='Qartal Birliyinə qoşuldun!';document.querySelector('#modalTags').innerHTML='<span class="tag">Qartal Birliyi</span>'});
  }else if(p==='quests'){
-   document.querySelector('#modalText').textContent='Gündəlik tapşırıq: 1 dəfə resurs topla, 1 bina inkişaf etdir və 1 dəstə qoşun hazırla.';
-   addAction('🎁 Gündəlik mükafatı al',()=>{if(game.questClaimed){document.querySelector('#modalText').textContent='Bu günün mükafatı artıq götürülüb.';return}game.questClaimed=true;game.gold+=100;game.food+=150;save();paintResources();document.querySelector('#modalText').textContent='Mükafat: 100 qızıl və 150 ərzaq!'});
+   const done={collect:(game.questCollects||0)>0,build:(game.questBuilds||0)>0,train:(game.questTraining||0)>0};
+   const mark=v=>v?'✅':'⬜';
+   document.querySelector('#modalText').innerHTML='<b style="color:#f0d39a">KRALLIQ TAPŞIRIĞI</b><div style="margin:9px 0;line-height:2">'+mark(done.collect)+' Resursları ən azı 1 dəfə topla<br>'+mark(done.build)+' Hər hansı binanı inkişaf etdir<br>'+mark(done.train)+' Yeni qoşun dəstəsi hazırla</div><div style="font-size:11px;color:#d9c59e">Mükafat: 100 qızıl · 150 ərzaq</div>';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">'+Object.values(done).filter(Boolean).length+'/3 tapşırıq</span><span class="tag">'+(game.questClaimed?'Mükafat alınıb':'Mükafat gözləyir')+'</span>';
+   const claim=()=>{if(game.questClaimed){document.querySelector('#modalText').textContent='Bu tapşırığın mükafatı artıq götürülüb.';return}if(!Object.values(done).every(Boolean)){document.querySelector('#modalText').textContent='Mükafatı almaq üçün hər üç tapşırığı tamamla.';return}game.questClaimed=true;game.gold+=100;game.food+=150;save();paintResources();renderMode('quests')};
+   addAction(game.questClaimed?'✅ Mükafat götürülüb':'🎁 Mükafatı al',claim);
  }
  save();
 }
