@@ -574,7 +574,8 @@ function getCityDefense(){
  const stationed=Object.values(game.towerArchers||{}).reduce((a,b)=>a+(Number(b)||0),0);
  const wall=(lv.wall||1)*38,towers=(lv.defenseTower||1)*32,keep=(lv.castle||1)*24;
  const barracks=(lv.barracks||1)*8,archery=(lv.archery||1)*10,stable=(lv.stable||1)*7;
- return Math.round(80+wall+towers+keep+barracks+archery+stable+stationed*3);
+ const allianceBonus=game.alliance==='Qartal Birliyi'?(1+Math.floor((game.alliancePoints||0)/500))*10:0;
+ return Math.round(80+wall+towers+keep+barracks+archery+stable+stationed*3+allianceBonus);
 }
 
 function collectResources(){
@@ -712,8 +713,25 @@ function renderMode(p){
    const war=document.createElement('button');war.textContent=game.heroWarCry?'⚔️ Döyüş nərəsi aktivdir':'⚔️ Döyüş nərəsini hazırla · 120 qızıl';war.disabled=heroLevel<2||!!game.heroWarCry;war.onclick=()=>{if(game.gold<120){document.querySelector('#modalText').textContent='Bacarıq üçün 120 qızıl lazımdır.';return}game.gold-=120;game.heroWarCry=true;save();paintResources();renderMode('hero')};document.querySelector('#modalActions').appendChild(war);
    const shield=document.createElement('button');shield.textContent=game.heroShield?'🛡️ Polad iradə aktivdir':'🛡️ Polad iradəni hazırla · 160 qızıl';shield.disabled=heroLevel<3||!!game.heroShield;shield.onclick=()=>{if(game.gold<160){document.querySelector('#modalText').textContent='Bacarıq üçün 160 qızıl lazımdır.';return}game.gold-=160;game.heroShield=true;save();paintResources();renderMode('hero')};document.querySelector('#modalActions').appendChild(shield);
  }else if(p==='alliance'){
-   document.querySelector('#modalText').textContent='İttifaq sistemi hələ təkoyunçu prototipidir. Yerli sınaq ittifaqına qoşula bilərsən.';
-   addAction('🛡️ Sınaq ittifaqına qoşul',()=>{game.alliance='Qartal Birliyi';save();document.querySelector('#modalText').textContent='Qartal Birliyinə qoşuldun!';document.querySelector('#modalTags').innerHTML='<span class="tag">Qartal Birliyi</span>'});
+   const joined=game.alliance==='Qartal Birliyi';
+   const points=game.alliancePoints||0,level=joined?1+Math.floor(points/500):0;
+   const progress=points%500;
+   document.querySelector('#modalText').innerHTML=joined
+    ?'<b style="color:#f0d39a">🛡️ QARTAL BİRLİYİ</b><p style="font-size:11px">İttifaq səviyyəsi: <b>'+level+'</b> · Şəxsi töhfə: <b>'+points+'</b> xal</p><div style="height:9px;background:#332b24;border-radius:8px;overflow:hidden"><div style="height:100%;width:'+(progress/5)+'%;background:linear-gradient(90deg,#9b713d,#e5c47b)"></div></div><p style="font-size:11px">Növbəti səviyyə üçün '+(500-progress)+' töhfə xalı lazımdır. Hər səviyyə şəhər müdafiəsinə +10 verir.</p><p style="font-size:10px;color:#b9aa88">Bu, hazırda biroyunçulu ittifaq prototipidir; real oyunçularla onlayn ittifaq bağlantısı hələ aktiv deyil.</p>'
+    :'Qartal Birliyi — krallığın müdafiə və inkişaf birliyi. Qoşulduqdan sonra resurs ianələri ilə ittifaq səviyyəsini artır.';
+   document.querySelector('#modalTags').innerHTML=joined?'<span class="tag">Qartal Birliyi · S'+level+'</span><span class="tag">Müdafiə +'+(level*10)+'</span>':'<span class="tag">Yeni ittifaq</span>';
+   if(!joined){
+     addAction('🛡️ Qartal Birliyinə qoşul',()=>{game.alliance='Qartal Birliyi';game.alliancePoints=0;save();renderMode('alliance')});
+   }else{
+     const donate=(resource,cost,pointsEarned)=>{
+       if((game[resource]||0)<cost){document.querySelector('#modalText').textContent='İanə üçün kifayət qədər resurs yoxdur.';return}
+       game[resource]-=cost;game.alliancePoints=(game.alliancePoints||0)+pointsEarned;
+       game.allianceDonations=(game.allianceDonations||0)+1;save();paintResources();renderMode('alliance');
+     };
+     addAction('🪵 100 taxta ianə et · +100 xal',()=>donate('wood',100,100));
+     addAction('🪨 100 daş ianə et · +150 xal',()=>donate('stone',100,150));
+     addAction('⚒️ 50 dəmir ianə et · +200 xal',()=>donate('iron',50,200));
+   }
  }else if(p==='quests'){
    const done={collect:(game.questCollects||0)>0,build:(game.questBuilds||0)>0,train:(game.questTraining||0)>0};
    const mark=v=>v?'✅':'⬜';
