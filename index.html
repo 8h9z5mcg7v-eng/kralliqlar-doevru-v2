@@ -590,22 +590,39 @@ function showPanel(name,kind){
    });
    const caravanTitle=document.createElement('div');caravanTitle.style.cssText='width:100%;font-size:12px;color:#f0d39a;margin:12px 0 3px';caravanTitle.textContent='🐪 TİCARƏT KARVANI';actions.appendChild(caravanTitle);
    const caravanInfo=document.createElement('div');caravanInfo.style.cssText='width:100%;font-size:11px;color:#d9c99f;line-height:1.6';actions.appendChild(caravanInfo);
+   const escortTitle=document.createElement('div');escortTitle.style.cssText='width:100%;font-size:12px;color:#f0d39a;margin:8px 0 2px';escortTitle.textContent='🛡️ KARVAN MÜHAFİZƏSİ';actions.appendChild(escortTitle);
+   const escortInfo=document.createElement('div');escortInfo.style.cssText='width:100%;font-size:11px;color:#d9c99f';actions.appendChild(escortInfo);
+   const escortChoices=[{id:'none',label:'Mühafizəsiz',type:null,count:0,power:0},{id:'infantry',label:'10 piyada',type:'infantry',count:10,power:100},{id:'archers',label:'10 oxatan',type:'archers',count:10,power:130},{id:'cavalry',label:'5 süvari',type:'cavalry',count:5,power:150}];
+   game.infantry??=60;game.archers??=40;game.cavalry??=20;game.caravanEscortChoice??='none';
+   const escortButtons=[];
+   escortChoices.forEach(choice=>{const b=document.createElement('button');b.textContent=(game.caravanEscortChoice===choice.id?'✓ ':'')+choice.label;b.style.cssText='font-size:10px;padding:6px;margin:2px';b.onclick=()=>{game.caravanEscortChoice=choice.id;save();escortButtons.forEach((x,j)=>x.textContent=(escortChoices[j].id===choice.id?'✓ ':'')+escortChoices[j].label);refreshCaravan()};escortButtons.push(b);actions.appendChild(b)});
    const caravanButton=document.createElement('button');actions.appendChild(caravanButton);
    const refreshCaravan=()=>{
      const active=game.caravanReadyAt||0,now=Date.now();
-     if(active&&now<active){caravanInfo.textContent='Karvan yoldadır. Geri dönməsinə: '+Math.ceil((active-now)/1000)+' saniyə.';caravanButton.textContent='⏳ Karvan səfərdədir';caravanButton.disabled=true}
-     else if(active){caravanInfo.textContent='Karvan geri qayıtdı. Qəniməti götürə bilərsən.';caravanButton.textContent='📦 Karvanı qarşıla';caravanButton.disabled=false;caravanButton.onclick=()=>{
+     if(active&&now<active){caravanInfo.textContent='Karvan yoldadır. Geri dönməsinə: '+Math.ceil((active-now)/1000)+' saniyə.';escortInfo.textContent='Mühafizə seçimi: '+(escortChoices.find(x=>x.id===game.caravanEscortChoice)?.label||'Mühafizəsiz');escortButtons.forEach(b=>b.disabled=true);caravanButton.textContent='⏳ Karvan səfərdədir';caravanButton.disabled=true}
+     else if(active){escortButtons.forEach(b=>b.disabled=true);caravanInfo.textContent='Karvan geri qayıtdı. Qəniməti götürə bilərsən.';caravanButton.textContent='📦 Karvanı qarşıla';caravanButton.disabled=false;caravanButton.onclick=()=>{
        const reward=game.caravanReward||{gold:120,stone:100};
        game.gold=(game.gold||0)+reward.gold;game.stone=(game.stone||0)+reward.stone;
-       game.caravanReadyAt=0;game.caravanReward=null;game.caravanTrips=(game.caravanTrips||0)+1;
-       save();paintResources();caravanInfo.textContent='Karvan gətirdi: '+reward.gold+' qızıl və '+reward.stone+' daş.';caravanButton.disabled=true;caravanButton.textContent='✅ Karvan qarşılandı';
+       const escort=game.caravanEscortReturn;
+       if(escort&&escort.type){const returned=escort.count-(escort.loss||0);game[escort.type]=(game[escort.type]||0)+returned;}
+       const ambushText=game.caravanAmbush?(game.caravanDefended?' Basqın oldu, mühafizəçilər karvanı qorudu!':' Karvan basqına məruz qaldı, mükafatın bir hissəsi itirildi.'):' Yol təhlükəsiz keçdi.';
+       game.caravanReadyAt=0;game.caravanReward=null;game.caravanEscortReturn=null;game.caravanTrips=(game.caravanTrips||0)+1;
+       save();paintResources();caravanInfo.textContent='Karvan gətirdi: '+reward.gold+' qızıl və '+reward.stone+' daş.'+ambushText;caravanButton.disabled=true;caravanButton.textContent='✅ Karvan qarşılandı';
        document.querySelector('#modalTags').innerHTML='<span class="tag">Səfərlər: '+game.caravanTrips+'</span>';
      }}
-     else{caravanInfo.textContent='Səfər xərci: 250 ərzaq və 120 taxta · 30 saniyə.';caravanButton.textContent='🐪 Karvanı yola sal';caravanButton.disabled=false;caravanButton.onclick=()=>{
+     else{escortButtons.forEach(b=>b.disabled=false);escortInfo.textContent='Seçilən mühafizə: '+(escortChoices.find(x=>x.id===game.caravanEscortChoice)?.label||'Mühafizəsiz')+'. Qoşunlar səfər müddətində ordudan ayrılır.';caravanInfo.textContent='Səfər xərci: 250 ərzaq və 120 taxta · 30 saniyə. Mühafizə karvanın itki riskini azaldır.';caravanButton.textContent='🐪 Karvanı yola sal';caravanButton.disabled=false;caravanButton.onclick=()=>{
        if(game.food<250||game.wood<120){document.querySelector('#modalText').textContent='Karvan üçün 250 ərzaq və 120 taxta lazımdır.';return}
+       const escort=escortChoices.find(x=>x.id===game.caravanEscortChoice)||escortChoices[0];
+       if(escort.type&&(game[escort.type]||0)<escort.count){document.querySelector('#modalText').textContent='Seçilmiş mühafizə üçün kifayət qədər qoşun yoxdur.';return}
        game.food-=250;game.wood-=120;
+       if(escort.type)game[escort.type]-=escort.count;
        const marketLevel=game.levels.market||1;
-       game.caravanReward={gold:120+marketLevel*30,stone:100+marketLevel*20};
+       const ambush=Math.random()<.38,threat=90+marketLevel*12+Math.floor(Math.random()*90);
+       const defended=!ambush||escort.power>=threat;
+       const rewardScale=ambush&&!defended?.45:1;
+       game.caravanReward={gold:Math.floor((120+marketLevel*30)*rewardScale),stone:Math.floor((100+marketLevel*20)*rewardScale)};
+       game.caravanEscortReturn={type:escort.type,count:escort.count,loss:ambush&&!defended?Math.max(1,Math.ceil(escort.count*.2)):0};
+       game.caravanAmbush=ambush;game.caravanDefended=defended;game.caravanThreat=threat;
        game.caravanReadyAt=Date.now()+30000;save();paintResources();refreshCaravan();
      }}
    };
