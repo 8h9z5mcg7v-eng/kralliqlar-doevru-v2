@@ -516,6 +516,35 @@ const game={wood:12500,stone:8200,iron:4600,gold:2100,food:3200,levels:{},infant
 try{Object.assign(game,JSON.parse(localStorage.getItem(SAVE)||'{}'));}catch(e){}
 function save(){try{localStorage.setItem(SAVE,JSON.stringify(game));}catch(e){}}
 function paintResources(){for(const k of ['wood','stone','iron','gold'])document.getElementById(k).textContent=game[k].toLocaleString('az-AZ')}
+const territoryYield=[
+ {name:'Şimal sərhəd qalası',resource:'stone',base:2},
+ {name:'Qədim karvan yolu',resource:'gold',base:1},
+ {name:'Dəmir təpələri',resource:'iron',base:2},
+ {name:'Qartal keçidi',resource:'food',base:3},
+ {name:'Köhnə istehkam',resource:'wood',base:2}
+];
+function territoryIncomePerMinute(){
+ const owned=game.conqueredTerritories||[],posts=game.territoryOutposts||{},rates={wood:0,stone:0,iron:0,gold:0,food:0};
+ for(const t of territoryYield)if(owned.includes(t.name))rates[t.resource]+=t.base+(posts[t.name]||0)*3;
+ return rates;
+}
+function accrueTerritoryIncome(){
+ const now=Date.now();
+ if(!game.territoryIncomeAt){game.territoryIncomeAt=now;save();return}
+ const elapsed=Math.min(86400000,Math.max(0,now-game.territoryIncomeAt));
+ if(elapsed<1000)return;
+ const rates=territoryIncomePerMinute(),minutes=elapsed/60000;
+ for(const k of Object.keys(rates))game[k]=(game[k]||0)+Math.floor(rates[k]*minutes);
+ game.territoryIncomeAt=now;save();paintResources();
+}
+function showTerritoryIncome(){
+ const rates=territoryIncomePerMinute();
+ const fmt=k=>Math.floor(rates[k]*10)/10;
+ const node=document.querySelector('#territoryIncome');
+ if(node)node.innerHTML='<b style="color:#f0d39a">ƏRAZİLƏRİN AVTOMATİK GƏLİRİ</b><br>🪵 '+fmt('wood')+'/dəq · 🪨 '+fmt('stone')+'/dəq · ⚒️ '+fmt('iron')+'/dəq<br>🪙 '+fmt('gold')+'/dəq · 🌾 '+fmt('food')+'/dəq';
+}
+accrueTerritoryIncome();
+setInterval(()=>{accrueTerritoryIncome();showTerritoryIncome()},15000);
 paintResources();
 
 let selectedBuilding=null;
@@ -637,6 +666,7 @@ function renderMode(p){
     <g data-target="rival4" style="cursor:pointer"><circle cx="65" cy="165" r="19" fill="#49677b" stroke="#e4c58c" stroke-width="3"/><text x="65" y="172" text-anchor="middle" font-size="20">♜</text></g>
    </svg>
    <div style="display:flex;justify-content:space-between;font-size:10px;color:#d9c99f;margin:5px 1px"><span>⚑ Qızılı nişan — fəth edilmiş torpaq</span><span>Yol: şimal ticarət yolu</span></div>
+   <div id="territoryIncome" style="padding:9px;margin:7px 0;background:#342b20;border:1px solid #8b7044;border-radius:7px;font-size:11px;line-height:1.8;color:#e5d3a8"></div>
    <p id="targetInfo" style="font-size:11px">Xəritədə nişanlardan birini seç.</p>`;
    const conquered=game.conqueredTerritories||[];
    const territoryPins=[
@@ -664,6 +694,7 @@ function renderMode(p){
      });
      mapSvg.appendChild(pin);
    });
+   accrueTerritoryIncome();showTerritoryIncome();
    const held=conquered.length;
    document.querySelector('#modalTags').innerHTML='<span class="tag">6 ərazi</span><span class="tag">Fəth edilən: '+held+'</span><span class="tag">Kəşfiyyat xəritəsi</span>';
    let target=null;
