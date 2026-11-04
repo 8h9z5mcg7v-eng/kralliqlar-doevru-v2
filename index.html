@@ -570,10 +570,13 @@ function towerGarrison(kind,deploy){
  document.querySelector('#modalTags').innerHTML='<span class="tag">Qüllə oxatanları: '+game.towerArchers[kind]+'</span><span class="tag">Müdafiə +'+(game.towerArchers[kind]*3)+'</span>';
 }
 function getCityDefense(){
- const stationed=Object.values(game.towerArchers||{}).reduce((a,b)=>a+b,0);
- const towerLevel=Object.values(game.levels||{}).reduce((a,b)=>a+b-1,0);
- return 120+stationed*3+towerLevel*45;
+ const lv=game.levels||{};
+ const stationed=Object.values(game.towerArchers||{}).reduce((a,b)=>a+(Number(b)||0),0);
+ const wall=(lv.wall||1)*38,towers=(lv.defenseTower||1)*32,keep=(lv.castle||1)*24;
+ const barracks=(lv.barracks||1)*8,archery=(lv.archery||1)*10,stable=(lv.stable||1)*7;
+ return Math.round(80+wall+towers+keep+barracks+archery+stable+stationed*3);
 }
+
 function collectResources(){
  game.wood+=250;game.stone+=160;game.iron+=80;game.gold+=35;save();paintResources();
  document.querySelector('#modalText').textContent='Resurs anbarına əlavə edildi: 250 taxta, 160 daş, 80 dəmir və 35 qızıl.';
@@ -660,7 +663,7 @@ function renderMode(p){
      game.food-=250;save();paintResources();
      const info=document.querySelector('#targetInfo');
      info.innerHTML='<div class="battle-stage"><div class="battle-side">🛡️<b>SƏNİN ORDUN</b><small>'+power+' hücum gücü · '+cityDefense+' şəhər müdafiəsi</small></div><div class="battle-clash">⚔️</div><div class="battle-side enemy">🏰<b>QARA QARTAL</b><small>160 müdafiə</small></div></div><div class="battle-progress"><i></i></div><div style="text-align:center;color:#f0d39a">Qoşunlar döyüş meydanına irəliləyir...</div>';
-     const defense=160+(game.rivalWins||0)*35;
+     const defense=160+(game.rivalWins||0)*35+(game.raidsSurvived||0)*5;
      const roll=power*(.85+Math.random()*.3);
      const won=roll>=defense;
      const battleButton=document.querySelector('#modalActions button:last-child');if(battleButton)battleButton.disabled=true;
@@ -680,10 +683,10 @@ function renderMode(p){
    document.querySelector('#modalText').innerHTML='Krallıq hadisələri və şəhər müdafiəsi.<div style="margin:12px 0 5px;font-size:11px">Divarların möhkəmliyi: <b id="wallHpText">'+game.wallHp+'/1000</b></div><div style="height:10px;background:#332b24;border-radius:8px;overflow:hidden"><div id="wallHpBar" style="height:100%;width:'+game.wallHp/10+'%;background:linear-gradient(90deg,#a94b38,#d7b46c)"></div></div><p style="font-size:10px">Düşmən basqınlarını dəf et və zədələnmiş divarları təmir et.</p>';
    document.querySelector('#modalTags').innerHTML='<span class="tag">Sərhəd müharibəsi</span><span class="tag">Müdafiə: '+getCityDefense()+'</span>';
    addAction('🔥 Düşmən basqını başlat',()=>{
-     const defense=getCityDefense(),attack=180+(game.raidsSurvived||0)*25;
-     const damage=Math.max(25,attack-defense*.45);
+     const defense=getCityDefense(),attack=180+(game.raidsSurvived||0)*25,guard=Math.min(25,Math.floor((game.infantry||0)/20));
+     const damage=Math.max(15,attack-(defense+guard*4)*.45);
      if(defense>=attack){game.gold+=80;game.xp=(game.xp||0)+15;game.raidsSurvived=(game.raidsSurvived||0)+1;document.querySelector('#modalText').innerHTML='🛡️ Basqın dəf edildi! +80 qızıl, +15 təcrübə.<div>Divarların möhkəmliyi: '+game.wallHp+'/1000</div>'}
-     else{game.wallHp=Math.max(0,game.wallHp-Math.round(damage));document.querySelector('#modalText').innerHTML='⚠️ Düşmən divarlara zərər vurdu! <b>'+Math.round(damage)+'</b> möhkəmlik itirildi.<div>Divarların möhkəmliyi: '+game.wallHp+'/1000</div>'}
+     else{game.wallHp=Math.max(0,game.wallHp-Math.round(damage));game.infantry=Math.max(0,(game.infantry||0)-Math.ceil(guard*.12));document.querySelector('#modalText').innerHTML='⚠️ Düşmən divarlara zərər vurdu! <b>'+Math.round(damage)+'</b> möhkəmlik itirildi.<div>Divarların möhkəmliyi: '+game.wallHp+'/1000</div>'}
      save();paintResources();
      const bar=document.querySelector('#wallHpBar');if(bar)bar.style.width=game.wallHp/10+'%';
      const hp=document.querySelector('#wallHpText');if(hp)hp.textContent=game.wallHp+'/1000';
