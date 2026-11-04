@@ -316,9 +316,10 @@ for(let i=0;i<30;i++){const a=i*2.399;const r=14+Math.random()*4;tree(Math.cos(a
    for(let n=0;n<3;n++){const bale=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.75,7),cropGold);bale.rotation.z=Math.PI/2;bale.position.set(x-1+n*.9,.42,z);scene.add(bale)}
  }
  // Small roadside pennants mark the approach to the main gate.
- for(const x of [-5.5,5.5]){
+ const gatePennantBlue=mat(0x344f67);
+  for(const x of [-5.5,5.5]){
    cylinder(scene,x,0,10,.045,.06,3.2,gold,6);
-   const flag=new THREE.Mesh(new THREE.PlaneGeometry(.78,.48),clothBlue);flag.position.set(x+.36,2.48,10);scene.add(flag);
+   const flag=new THREE.Mesh(new THREE.PlaneGeometry(.78,.48),gatePennantBlue);flag.position.set(x+.36,2.48,10);scene.add(flag);
    const emblem=new THREE.Mesh(new THREE.CircleGeometry(.12,8),gold);emblem.position.set(x+.36,2.48,10.025);scene.add(emblem);
  }
 
