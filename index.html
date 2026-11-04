@@ -633,9 +633,27 @@ function renderMode(p){
     <g data-target="ruins" style="cursor:pointer"><circle cx="330" cy="255" r="18" fill="#71634d" stroke="#e8d19a" stroke-width="3"/><text x="330" y="261" text-anchor="middle" font-size="18">🏚</text></g>
     <g data-target="fort" style="cursor:pointer"><circle cx="485" cy="250" r="18" fill="#696e70" stroke="#e8d19a" stroke-width="3"/><text x="485" y="256" text-anchor="middle" font-size="18">🏰</text></g><g data-target="rival" style="cursor:pointer"><circle cx="350" cy="72" r="20" fill="#842f2a" stroke="#f0c17b" stroke-width="3"/><text x="350" y="79" text-anchor="middle" font-size="20">♜</text></g>
    </svg>
-   <div style="display:flex;justify-content:space-between;font-size:10px;color:#d9c99f;margin:5px 1px"><span>● Kəşf edilən ərazilər</span><span>Yol: şimal ticarət yolu</span></div>
+   <div style="display:flex;justify-content:space-between;font-size:10px;color:#d9c99f;margin:5px 1px"><span>⚑ Qızılı nişan — fəth edilmiş torpaq</span><span>Yol: şimal ticarət yolu</span></div>
    <p id="targetInfo" style="font-size:11px">Xəritədə nişanlardan birini seç.</p>`;
-   const held=(game.conqueredTerritories||[]).length;
+   const conquered=game.conqueredTerritories||[];
+   const territoryPins=[
+     {name:'Şimal sərhəd qalası',x:175,y:72},
+     {name:'Qədim karvan yolu',x:175,y:170},
+     {name:'Dəmir təpələri',x:420,y:145},
+     {name:'Qartal keçidi',x:145,y:265},
+     {name:'Köhnə istehkam',x:285,y:65}
+   ];
+   const mapSvg=document.querySelector('#realmMap');
+   territoryPins.forEach((spot,index)=>{
+     if(!conquered.includes(spot.name))return;
+     const pin=document.createElementNS('http://www.w3.org/2000/svg','g');
+     pin.setAttribute('transform','translate('+spot.x+' '+spot.y+')');
+     pin.setAttribute('data-owned-territory',spot.name);
+     pin.innerHTML='<circle r="15" fill="#b38a42" stroke="#f6df9d" stroke-width="3"/><text text-anchor="middle" y="6" font-size="16">⚑</text>';
+     const tip=document.createElementNS('http://www.w3.org/2000/svg','title');tip.textContent=spot.name+' · Sənin nəzarətində';pin.appendChild(tip);
+     mapSvg.appendChild(pin);
+   });
+   const held=conquered.length;
    document.querySelector('#modalTags').innerHTML='<span class="tag">6 ərazi</span><span class="tag">Fəth edilən: '+held+'</span><span class="tag">Kəşfiyyat xəritəsi</span>';
    let target=null;
    document.querySelectorAll('#realmMap [data-target]').forEach(btn=>btn.addEventListener('click',()=>{
