@@ -488,6 +488,23 @@ function cityTree(x,z,s=1){post(city,x,0,z,.18*s,1.25*s,mWood);for(let j=0;j<3;j
 for(const p of [[-15,-11],[-15,-8],[-15,9],[-12,12],[15,-11],[15,10],[11,13],[-5,13],[5,-13]])cityTree(p[0],p[1],.8);
 for(let i=0;i<14;i++){const x=-15+(i%7)*5,z=i<7?-18:18;const b=slab(city,x,-.1,z,.25,.6,.25,mWood);b.rotation.z=.2}
 
+window.__cityUpgradeVisual=(kind,level)=>{
+ const target=newBuildings.find(b=>b.userData.kind===kind)|| (kind==='castle'?keep:null);
+ if(!target)return;
+ const prior=target.userData.visualUpgradeLevel||1;
+ if(level<=prior)return;
+ const mat=level>=5?mGold:mStoneLit;
+ // Each level adds a visible architectural tier, not just a text counter.
+ const y=kind==='castle'?8.35:3.05;
+ const radius=kind==='castle'?2.15:1.15;
+ for(let i=0;i<Math.min(4,level-prior);i++){
+  const side=(prior+i)%4, ang=side*Math.PI/2;
+  const x=Math.cos(ang)*radius,z=Math.sin(ang)*radius;
+  post(target,x,y+i*.18,z,.18,.55,mat);
+  peak(target,x,y+.5+i*.18,z,.29,.55,level>=5?mRoofGold:mRoof2,6);
+ }
+ target.userData.visualUpgradeLevel=level;
+};
 for(const child of originalCityChildren){if(!child.isLight)child.visible=false;} city.visible=true; camera.position.set(0,25,34); camera.lookAt(0,1.5,0);
 } catch(cityBuildError) { console.error('City rebuild failed; keeping original city visible:',cityBuildError); const diagnostic=document.createElement('div'); diagnostic.textContent='Şəhər yenilənmə xətası: '+(cityBuildError?.message||cityBuildError); diagnostic.style.cssText='position:fixed;left:12px;right:12px;bottom:84px;z-index:99999;background:#5b211d;color:#fff;padding:12px;border:1px solid #e4a27b;border-radius:8px;font:13px sans-serif'; document.body.appendChild(diagnostic); }
 }
@@ -533,7 +550,7 @@ function upgradeSelected(){
  if(game.wood<cost.wood||game.stone<cost.stone||game.iron<cost.iron){
    document.querySelector('#modalText').textContent='Resurslar kifayət etmir. Resurs topladıqdan sonra yenidən cəhd et.';return;
  }
- game.wood-=cost.wood;game.stone-=cost.stone;game.iron-=cost.iron;game.levels[k]=lv+1;save();paintResources();
+ game.wood-=cost.wood;game.stone-=cost.stone;game.iron-=cost.iron;game.levels[k]=lv+1;window.__cityUpgradeVisual?.(k,lv+1);save();paintResources();
  document.querySelector('#modalText').textContent=selectedBuilding.name+' '+(lv+1)+'-ci səviyyəyə yüksəldildi!';
  document.querySelector('#modalTags').innerHTML='<span class="tag">Səviyyə '+(lv+1)+'</span><span class="tag">Yeniləndi</span>';
 }
