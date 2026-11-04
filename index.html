@@ -509,6 +509,42 @@ function cityBuilding(x,z,label,kind,scale=1,accent=mRoof){
 slab(city,0,-1.05,0,43,.9,37,mStoneDark);slab(city,0,-.58,0,42,.22,36,mGrass);
 slab(city,0,-.43,0,5,.08,32,mPath);slab(city,0,-.42,0,39,.08,4.2,mPath);
 slab(city,0,-.37,0,9,.12,8,mPathEdge);slab(city,0,-.29,0,8.4,.1,7.4,mPath);
+
+ // Royal avenue and keep courtyard: individually laid cobbles, raised kerbs and paving bands.
+ const pavingA=C(0xc1ad8b),pavingB=C(0x9e8d70),pavingC=C(0xd0bd99),kerbMat=C(0x6d675b);
+ for(let z=-14.8;z<=14.81;z+=.82){
+   for(let x=-2.05;x<=2.06;x+=.72){
+     const tile=slab(city,x+(Math.floor((z+15)/.82)%2)*.18,-.315,z,.57,.075,.57,((Math.round((z+15)*10)+Math.round((x+3)*10))%4===0)?pavingC:((Math.round(x*10)+Math.round(z*10))%3===0?pavingB:pavingA));
+     tile.rotation.y=((Math.round(x*10)+Math.round(z*10))%2)*.035;
+   }
+ }
+ // Broad square in front of the royal keep, with a stone border and radial paving.
+ for(let z=-4.1;z<=4.11;z+=.78)for(let x=-4.6;x<=4.61;x+=.78){
+   if(Math.abs(x)<2.2&&Math.abs(z)<2.1)continue;
+   slab(city,x,-.235,z,.58,.065,.58,((Math.round(x+z)*3)%4===0)?pavingC:pavingA);
+ }
+ for(let x=-4.8;x<=4.81;x+=.8){
+   slab(city,x,-.18,-4.55,.7,.14,.24,kerbMat);
+   slab(city,x,-.18,4.55,.7,.14,.24,kerbMat);
+ }
+ for(let z=-4.1;z<=4.11;z+=.8){
+   slab(city,-4.9,-.18,z,.24,.14,.7,kerbMat);
+   slab(city,4.9,-.18,z,.24,.14,.7,kerbMat);
+ }
+ // Avenue drainage channels and stone curbs make the road read as a built medieval street.
+ for(const x of [-2.65,2.65]){
+   slab(city,x,-.23,0,.18,.16,31.8,kerbMat);
+   for(let z=-14;z<=14;z+=2.2){
+     slab(city,x,-.12,z,.24,.08,.16,mStoneLit);
+   }
+ }
+ // Short paved forecourts connect service buildings to the main street.
+ for(const [x,z,w,d] of [[-8,-8,5.1,4.8],[8,-8,5.2,4.8],[-8,7,4.8,4.8],[8,7,4.8,4.8],[-13,-3,4.5,4.2],[13,3,4.7,4.3]]){
+   slab(city,x,-.3,z,w,.09,d,mPathEdge);
+   slab(city,x,-.235,z,w-.22,.07,d-.22,mPath);
+   for(let n=0;n<Math.floor(w/.7);n++)slab(city,x-w/2+.4+n*.7,-.16,z-d/2+.22,.48,.045,.09,pavingB);
+ }
+
 // perimeter walls, gatehouse and eight crenellated towers
 function cityWall(x,z,w,d){slab(city,x,0,z,w,3.05,d,mStone);slab(city,x,3.02,z,w+.12,.28,d+.12,mStoneDark);const n=Math.floor((w+d)*.42);for(let j=0;j<n;j++){const t=j/(n-1);if(w>d){slab(city,x-w/2+t*w,3.28,z,.48,.55,d+.18,mStoneLit);slab(city,x-w/2+t*w,3.28,z,.48,.55,d+.18,mStoneLit)}else slab(city,x,3.28,z-d/2+t*d,w+.18,.55,.48,mStoneLit)}}
 cityWall(0,-16.1,37,.9);cityWall(0,16.1,37,.9);cityWall(-18.1,0,.9,31.5);cityWall(18.1,0,.9,31.5);
