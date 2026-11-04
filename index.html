@@ -594,6 +594,8 @@ function trainArmy(type){
  game[type]=(game[type]||0)+amount;game.troops=(game.infantry||0)+(game.archers||0)+(game.cavalry||0);save();paintResources();
  document.querySelector('#modalText').textContent=amount+' yeni '+({infantry:'piyada',archers:'oxatan',cavalry:'süvari'}[type])+' hazırlandı. Təlim binası səviyyəsi: '+level+'. Ümumi qoşun: '+game.troops+'.';
 }
+function getHeroLevel(){return Math.max(1,1+Math.floor((game.xp||0)/100))}
+function getHeroBonus(){return 1+(getHeroLevel()-1)*.03}
 function recordBattle(result,enemy,details){
  game.battleReports=game.battleReports||[];
  game.battleReports.unshift({date:new Date().toLocaleString('az-AZ'),result,enemy,details});
@@ -657,7 +659,7 @@ function renderMode(p){
    });
    addAction('⚔️ Qara Qartala hücum',()=>{
      if(!target||target!=='rival'){document.querySelector('#targetInfo').textContent='Əvvəlcə qırmızı Qara Qartal nişanını seç.';return}
-     const power=(game.infantry||0)+(game.archers||0)*1.2+(game.cavalry||0)*1.5;const cityDefense=getCityDefense();
+     const basePower=(game.infantry||0)+(game.archers||0)*1.2+(game.cavalry||0)*1.5;const power=Math.round(basePower*getHeroBonus());const cityDefense=getCityDefense();
      if(power<160){document.querySelector('#targetInfo').textContent='Qoşun gücün 160-dan azdır. Əvvəlcə ordu hazırla.';return}
      if(game.food<250){document.querySelector('#targetInfo').textContent='Hücum üçün 250 ərzaq lazımdır.';return}
      game.food-=250;save();paintResources();
@@ -701,8 +703,11 @@ function renderMode(p){
      const bar=document.querySelector('#wallHpBar');if(bar)bar.style.width='100%';const hp=document.querySelector('#wallHpText');if(hp)hp.textContent='1000/1000';
    });
  }else if(p==='hero'){
-   document.querySelector('#modalText').textContent='Sənin ilk qəhrəmanın: Qartal sərkərdəsi. Təcrübə: '+(game.xp||0)+'. Kəşfiyyat və döyüşlər qəhrəman təcrübəsi qazandırır.';
-   document.querySelector('#modalTags').innerHTML='<span class="tag">Qəhrəman · Səviyyə 1</span><span class="tag">Hücum +5%</span>';
+   const heroLevel=getHeroLevel(),nextXp=heroLevel*100,progress=(game.xp||0)-(heroLevel-1)*100;
+   document.querySelector('#modalText').innerHTML='Qartal sərkərdəsi — krallığın baş komandanı.<div style="margin:9px 0 4px">Təcrübə: '+(game.xp||0)+' / '+nextXp+'</div><div style="height:9px;background:#332b24;border-radius:8px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,progress)+'%;background:linear-gradient(90deg,#9b713d,#e5c47b)"></div></div><p style="font-size:11px">Hər səviyyə ordunun hücum gücünü 3% artırır.</p>';
+   document.querySelector('#modalTags').innerHTML='<span class="tag">Qəhrəman · Səviyyə '+heroLevel+'</span><span class="tag">Hücum +'+((heroLevel-1)*3)+'%</span>';
+   addAction('📚 Sərkərdə təlimi · 150 qızıl',()=>{if(game.gold<150){document.querySelector('#modalText').textContent='Təlim üçün 150 qızıl lazımdır.';return}game.gold-=150;game.xp=(game.xp||0)+35;save();paintResources();renderMode('hero')});
+   addAction('⚔️ Döyüş hazırlığı · 100 ərzaq',()=>{if(game.food<100){document.querySelector('#modalText').textContent='Hazırlıq üçün 100 ərzaq lazımdır.';return}game.food-=100;game.xp=(game.xp||0)+20;save();paintResources();renderMode('hero')});
  }else if(p==='alliance'){
    document.querySelector('#modalText').textContent='İttifaq sistemi hələ təkoyunçu prototipidir. Yerli sınaq ittifaqına qoşula bilərsən.';
    addAction('🛡️ Sınaq ittifaqına qoşul',()=>{game.alliance='Qartal Birliyi';save();document.querySelector('#modalText').textContent='Qartal Birliyinə qoşuldun!';document.querySelector('#modalTags').innerHTML='<span class="tag">Qartal Birliyi</span>'});
