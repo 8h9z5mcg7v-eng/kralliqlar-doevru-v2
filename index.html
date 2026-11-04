@@ -635,13 +635,14 @@ function renderMode(p){
    </svg>
    <div style="display:flex;justify-content:space-between;font-size:10px;color:#d9c99f;margin:5px 1px"><span>● Kəşf edilən ərazilər</span><span>Yol: şimal ticarət yolu</span></div>
    <p id="targetInfo" style="font-size:11px">Xəritədə nişanlardan birini seç.</p>`;
-   document.querySelector('#modalTags').innerHTML='<span class="tag">6 ərazi</span><span class="tag">Kəşfiyyat xəritəsi</span>';
+   const held=(game.conqueredTerritories||[]).length;
+   document.querySelector('#modalTags').innerHTML='<span class="tag">6 ərazi</span><span class="tag">Fəth edilən: '+held+'</span><span class="tag">Kəşfiyyat xəritəsi</span>';
    let target=null;
    document.querySelectorAll('#realmMap [data-target]').forEach(btn=>btn.addEventListener('click',()=>{
      target=btn.dataset.target;
      document.querySelectorAll('#realmMap [data-target] circle').forEach(c=>c.setAttribute('stroke','#e8d19a'));
      btn.querySelector('circle').setAttribute('stroke','#fff');
-     document.querySelector('#targetInfo').textContent=({forest:'Qədim meşə · 260 taxta mükafatı.',camp:'Quldur düşərgəsi · 180 qızıl mükafatı.',mine:'Dəmir mədəni · 210 dəmir mükafatı.',lake:'Sakit göl · 280 ərzaq mükafatı.',ruins:'Qədim xarabalıq · 240 qızıl mükafatı.',fort:'Şimal qalası · 190 daş mükafatı.',rival:'Qara Qartal krallığı · rəqib hökmdar, müdafiə gücü 160.'})[target];
+     document.querySelector('#targetInfo').textContent=({forest:'Qədim meşə · 260 taxta mükafatı.',camp:'Quldur düşərgəsi · 180 qızıl mükafatı.',mine:'Dəmir mədəni · 210 dəmir mükafatı.',lake:'Sakit göl · 280 ərzaq mükafatı.',ruins:'Qədim xarabalıq · 240 qızıl mükafatı.',fort:'Şimal qalası · 190 daş mükafatı.',rival:'Qara Qartal krallığı · rəqib hökmdar, müdafiə gücü '+(160+(game.rivalWins||0)*35+(game.raidsSurvived||0)*5)+'. Fəth edilən ərazilər: '+(game.conqueredTerritories||[]).length})[target];
    }));
    addAction('🧭 Kəşfiyyat / yürüş',()=>{
      if(!target){document.querySelector('#targetInfo').textContent='Əvvəlcə xəritədə ərazi seç.';return}
@@ -671,7 +672,16 @@ function renderMode(p){
      const won=roll>=defense;
      const battleButton=document.querySelector('#modalActions button:last-child');if(battleButton)battleButton.disabled=true;
      setTimeout(()=>{
-       if(won){game.gold+=350;game.wood+=220;game.xp=(game.xp||0)+60;game.rivalWins=(game.rivalWins||0)+1;info.textContent='QƏLƏBƏ! Qara Qartalın müdafiəsi yarıldı. +350 qızıl, +220 taxta, +60 təcrübə.';recordBattle('Qələbə','Qara Qartal','Müdafiə xətti yarıldı. 350 qızıl və 220 taxta qənimət götürüldü.')}
+       if(won){
+         game.gold+=350;game.wood+=220;game.xp=(game.xp||0)+60;game.rivalWins=(game.rivalWins||0)+1;
+         game.conqueredTerritories=game.conqueredTerritories||[];
+         const territoryNames=['Şimal sərhəd qalası','Qədim karvan yolu','Dəmir təpələri','Qartal keçidi','Köhnə istehkam'];
+         const captured=territoryNames[(game.rivalWins-1)%territoryNames.length];
+         if(!game.conqueredTerritories.includes(captured))game.conqueredTerritories.push(captured);
+         game.alliancePoints=(game.alliancePoints||0)+(game.alliance==='Qartal Birliyi'?50:0);
+         info.innerHTML='<b style="color:#f0d39a">QƏLƏBƏ! ƏRAZİ FƏTH EDİLDİ</b><br>'+captured+' artıq krallığının nəzarətindədir.<br>+350 qızıl · +220 taxta · +60 təcrübə'+(game.alliance==='Qartal Birliyi'?' · +50 ittifaq xalı':'');
+         recordBattle('Qələbə','Qara Qartal',captured+' fəth edildi. 350 qızıl, 220 taxta və 60 təcrübə qazanıldı.');
+       }
        else{game.infantry=Math.max(0,game.infantry-Math.ceil(game.infantry*.08));game.archers=Math.max(0,game.archers-Math.ceil(game.archers*.06));game.cavalry=Math.max(0,game.cavalry-Math.ceil(game.cavalry*.1));game.xp=(game.xp||0)+12;info.textContent='MƏĞLUBİYYƏT. Qoşunların itki verdi. Qəhrəman +12 təcrübə qazandı.';recordBattle('Məğlubiyyət','Qara Qartal','Hücum dəf edildi. Qoşunların itki verdi.')}
        game.troops=game.infantry+game.archers+game.cavalry;save();paintResources();if(battleButton)battleButton.disabled=false;
      },2600);
