@@ -856,6 +856,8 @@ for(let i=0;i<14;i++){const x=-15+(i%7)*5,z=i<7?-18:18;const b=slab(city,x,-.1,z
 
  
 
+ // Shared skin material must exist before guards and patrols are constructed.
+ const walkerSkin=C(0xc99a70);
  // Royal gate garrison: armored sentries, spears, shields and two mounted patrols.
  const royalGuards=[];
  const armorMat=C(0x53616b),redCloak=C(0x873d32),shieldMat=C(0xb28a48);
@@ -896,7 +898,7 @@ for(let i=0;i<14;i++){const x=-15+(i%7)*5,z=i<7?-18:18;const b=slab(city,x,-.1,z
  // Animated town life inside the rebuilt capital: guards, merchants and villagers.
  const cityWalkers=[];
  const walkerCloth=[C(0x8d4937),C(0x315b78),C(0x9a7a43),C(0x526344),C(0x704d78)];
- const walkerSkin=C(0xc99a70),walkerLeather=C(0x3c3025);
+ const walkerLeather=C(0x3c3025);
  function addCityWalker(x,z,index,routeX,routeZ){
    const p=new THREE.Group(),cloth=walkerCloth[index%walkerCloth.length];
    const body=new THREE.Mesh(new THREE.CylinderGeometry(.19,.25,.72,7),cloth);body.position.y=.78;p.add(body);
