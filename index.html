@@ -374,12 +374,45 @@ for(const [sx,sz] of [[-2.5,-2],[2.5,-2],[-2.5,2],[2.5,2]]){
 
 loadKingdomTemplateAssets().catch(e=>console.warn('Kingdom 3D template fallback:',e));
 // individual city buildings with separate silhouettes
-function house(x,z,name,kind='house',scale=1){const g=new THREE.Group();const w=kind==='hall'?3.8:2.7,d=kind==='hall'?3.1:2.5,h=kind==='stable'?1.8:2.2;
-box(g,0,0,0,w*scale,h*scale,d*scale,kind==='barracks'?stone:wood);
-if(kind==='stable'){box(g,0,h*scale,0,w*scale*.55,.35*scale,d*scale*1.15,roof);box(g,-.55*scale,.2,1.27*scale,.55*scale,1.1*scale,.15,wood);box(g,.55*scale,.2,1.27*scale,.55*scale,1.1*scale,.15,wood)}
-else {const r=kind==='hall'?roofBlue:roof;const a=cone(g,0,h*scale,0,Math.max(w,d)*.72*scale,1.35*scale,r,4);a.rotation.y=Math.PI/4}
-box(g,0,.1,.0,.7*scale,1.2*scale,.08,gold).position.z=d*scale/2+.04;
-g.position.set(x,0,z);g.userData={name,kind};scene.add(g);return g}
+function house(x,z,name,kind='house',scale=1){
+ const g=new THREE.Group();
+ const w=kind==='hall'?3.8:2.7,d=kind==='hall'?3.1:2.5,h=kind==='stable'?1.8:2.2;
+ const plasterByKind={barracks:0x9b9b8e,stable:0xb39b72,archery:0xb7a17d,store:0xb7a58a,forge:0x77766e,market:0xc4a779,lumber:0x9b815d,farm:0xb2a078,hall:0xc0b18e,temple:0xd0c5a8};
+ const wallMat=mat(plasterByKind[kind]||0xb7a17d),frameMat=mat(0x493326),roofMat=kind==='hall'?roofBlue:(kind==='temple'?mat(0x777d83):(kind==='forge'?mat(0x51494a):roof));
+ // Raised stone foundation and plaster-and-timber walls
+ box(g,0,.16,0,(w+.34)*scale,.32*scale,(d+.34)*scale,darkStone);
+ box(g,0,(h/2+.22)*scale,0,w*scale,h*scale,d*scale,wallMat);
+ for(const side of [-1,1]){
+  box(g,side*(w/2-.12)*scale,(h/2+.22)*scale,(d/2+.035)*scale,.16*scale,h*scale,.12*scale,frameMat);
+  box(g,side*(w/2-.12)*scale,(h/2+.22)*scale,-(d/2+.035)*scale,.16*scale,h*scale,.12*scale,frameMat);
+ }
+ // Two sloping roof planes create a proper pitched medieval roof, not a pyramid cap
+ if(kind==='stable'){
+  box(g,0,h*scale+.18*scale,0,w*.62*scale,.34*scale,d*1.2*scale,roofMat);
+  for(const side of [-1,1])box(g,side*.66*scale,h*scale+.12*scale,0,.18*scale,.22*scale,d*1.28*scale,frameMat);
+ }else{
+  const half=(w*.57)*scale,roofDepth=(d+.46)*scale,roofRun=Math.sqrt(half*half+(.9*scale)*(.9*scale));
+  for(const side of [-1,1]){
+   const panel=new THREE.Mesh(new THREE.BoxGeometry(roofRun,.18*scale,roofDepth),roofMat);
+   panel.position.set(side*half*.48,h*scale+.67*scale,0);
+   panel.rotation.z=side*.48;panel.castShadow=true;panel.receiveShadow=true;g.add(panel);
+   box(g,side*half,h*scale+.17*scale,0,.13*scale,.2*scale,roofDepth,frameMat);
+  }
+  box(g,0,h*scale+1.1*scale,0,.16*scale,.2*scale,roofDepth,frameMat);
+  // Decorative gable fascia and roof-end beams
+  for(const zSide of [-1,1]){
+   box(g,0,h*scale+.43*scale,zSide*(d/2+.17)*scale,w*.92*scale,.12*scale,.13*scale,frameMat);
+  }
+ }
+ // Distinct entrance porch, lintel and door
+ box(g,0,.76*scale,(d/2+.09)*scale,.86*scale,1.48*scale,.18*scale,frameMat);
+ box(g,0,.73*scale,(d/2+.19)*scale,.62*scale,1.28*scale,.07*scale,wood);
+ box(g,0,1.48*scale,(d/2+.2)*scale,1.02*scale,.16*scale,.24*scale,darkStone);
+ if(kind==='stable'){
+  for(const side of [-1,1])box(g,side*.72*scale,.86*scale,(d/2+.18)*scale,.13*scale,1.62*scale,.14*scale,frameMat);
+ }
+ g.position.set(x,0,z);g.userData={name,kind};scene.add(g);return g
+}
 const buildings=[
 house(-5,-4,'Kazarma','barracks'),house(5,-4,'Atçılıq tövləsi','stable'),house(-5,4,'Oxçular meydanı','archery'),house(5,4,'Anbar','store'),house(-13,-3,'Dəmirçi','forge'),house(13,3,'Bazar','market'),house(-14,4,'Taxtaçı','lumber'),house(14,-4,'Təsərrüfat','farm'),house(-3,-13,'Şura binası','hall'),house(4,13,'Məbəd','temple')
 ];
