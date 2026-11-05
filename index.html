@@ -164,6 +164,7 @@
  window.addEventListener('unhandledrejection',e=>report(e.reason?.message||String(e.reason||'Modul yüklənmədi')));
 })();
 </script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 let THREE;
 try { THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'); }
