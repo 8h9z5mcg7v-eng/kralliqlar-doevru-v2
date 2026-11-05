@@ -1650,7 +1650,7 @@ for(let side of [-1,1]){
  box(marketWagon,side*.77,1.02,.98,.12,.62,.12,wagonWood);
  const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.16,16),wagonIron);
  wheel.rotation.z=Math.PI/2;wheel.position.set(side*.91,.53,0);marketWagon.add(wheel);wagonWheels.push(wheel);
- const hub=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.2,10),wagonGold||wagonPlank);
+ const hub=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.2,10),wagonPlank);
  hub.rotation.z=Math.PI/2;hub.position.set(side*1.01,.53,0);marketWagon.add(hub);
  for(let spoke=0;spoke<8;spoke++){
   const a=spoke*Math.PI/4;
