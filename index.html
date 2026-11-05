@@ -450,6 +450,23 @@ function house(x,z,name,kind='house',scale=1){
    }
   }
  }
+ // Half-timbered medieval facade: structural oak rails, braces and stone corner blocks.
+ const beamDepth=.105*scale,frontZ=(d/2+.075)*scale;
+ for(const y of [.48,1.02,1.62])box(g,0,y*scale,frontZ,w*.94*scale,.105*scale,beamDepth,frameMat);
+ for(const x of [-w*.43,w*.43]){
+  box(g,x*scale,1.02*scale,frontZ,.11*scale,1.55*scale,beamDepth,frameMat);
+  for(const sign of [-1,1]){
+   const brace=new THREE.Mesh(new THREE.BoxGeometry(.095*scale,1.02*scale,beamDepth),frameMat);
+   brace.position.set(x*scale,.98*scale,frontZ+.008*scale);brace.rotation.z=sign*.52;brace.castShadow=true;g.add(brace);
+  }
+ }
+ // Rough-cut ashlar blocks at exposed corners break up the flat wall silhouette.
+ const cornerStone=mat(0x77766e);
+ for(const x of [-1,1])for(const z of [-1,1])for(let y=0;y<3;y++){
+  const block=new THREE.Mesh(new THREE.BoxGeometry(.23*scale,.22*scale,.2*scale),cornerStone);
+  block.position.set(x*(w/2+.015)*scale,(.36+y*.62)*scale,z*(d/2+.025)*scale);
+  block.castShadow=true;block.receiveShadow=true;g.add(block);
+ }
  // Distinct entrance porch, lintel and door
  box(g,0,.76*scale,(d/2+.09)*scale,.86*scale,1.48*scale,.18*scale,frameMat);
  box(g,0,.73*scale,(d/2+.19)*scale,.62*scale,1.28*scale,.07*scale,wood);
