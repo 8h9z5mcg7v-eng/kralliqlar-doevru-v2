@@ -1638,8 +1638,55 @@ for(let soldierIndex=0;soldierIndex<6;soldierIndex++){
 }
 window.__royalInfantry=royalInfantry;
 
+ 
+// ROYAL ARCHER LINE: six bowmen with animated draw-and-release practice
+const royalArchers=[];
+const archerLeatherMat=mat(0x60452e),archerClothMat=mat(0x315b78),archerBowMat=mat(0x50351f);
+const archerArrowMat=mat(0xb7a17a);
+for(let archerIndex=0;archerIndex<6;archerIndex++){
+ const archer=new THREE.Group();
+ const row=archerIndex<3?0:1,col=archerIndex%3;
+ heroPart(archer,new THREE.CylinderGeometry(.21,.27,.7,8),infantryArmorMat,0,.99,0);
+ heroPart(archer,new THREE.BoxGeometry(.48,.62,.12),archerClothMat,0,1.0,-.12);
+ heroPart(archer,new THREE.SphereGeometry(.17,10,8),heroSkin,0,1.51,.015);
+ heroPart(archer,new THREE.ConeGeometry(.22,.28,7),heroSteel,0,1.73,0);
+ heroPart(archer,new THREE.BoxGeometry(.5,.08,.28),infantryGoldMat,0,1.61,.015);
+ for(const legX of [-.13,.13]){
+  heroPart(archer,new THREE.CylinderGeometry(.07,.085,.46,7),infantryArmorMat,legX,.25,0);
+  heroPart(archer,new THREE.BoxGeometry(.15,.12,.22),archerLeatherMat,legX,.05,.04);
+ }
+ const bowArm=new THREE.Group();bowArm.position.set(.3,1.25,.04);
+ const bow=new THREE.Mesh(new THREE.TorusGeometry(.36,.035,6,18,Math.PI),archerBowMat);
+ bow.rotation.z=-Math.PI/2;bowArm.add(bow);
+ const grip=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.22,6),archerLeatherMat);
+ grip.position.set(0,0,.015);bowArm.add(grip);
+ const string=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.68,5),archerArrowMat);
+ string.position.set(0,0,-.015);string.rotation.z=Math.PI/2;bowArm.add(string);
+ archer.add(bowArm);
+ const arrowGroup=new THREE.Group();
+ const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.9,5),archerArrowMat);
+ shaft.rotation.x=Math.PI/2;arrowGroup.add(shaft);
+ const tip=new THREE.Mesh(new THREE.ConeGeometry(.065,.2,5),heroSteel);
+ tip.rotation.x=-Math.PI/2;tip.position.z=-.49;arrowGroup.add(tip);
+ arrowGroup.position.set(.3,1.28,.42);arrowGroup.visible=false;archer.add(arrowGroup);
+ archer.position.set(5.7+col*1.35+(row?.25:0),0,9.1+row*1.45);
+ archer.rotation.y=Math.PI;scene.add(archer);
+ royalArchers.push({root:archer,bow:bowArm,arrow:arrowGroup,phase:archerIndex*.62});
+}
+window.__royalArchers=royalArchers;
+// Practice targets give the archers a clear firing direction and scale.
+const archerTargets=[];
+for(let i=0;i<3;i++){
+ const target=new THREE.Group(),x=6.2+i*1.55,z=4.9;
+ const post=new THREE.Mesh(new THREE.CylinderGeometry(.055,.075,1.7,7),archerLeatherMat);post.position.y=.85;target.add(post);
+ const disk=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.12,16),mat(0x9b4938));disk.rotation.x=Math.PI/2;disk.position.set(0,1.55,.06);target.add(disk);
+ const inner=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.13,16),mat(0xe2d2a6));inner.rotation.x=Math.PI/2;inner.position.set(0,1.55,.14);target.add(inner);
+ const bull=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.14,12),mat(0xb58a43));bull.rotation.x=Math.PI/2;bull.position.set(0,1.55,.22);target.add(bull);
+ target.position.set(x,0,z);scene.add(target);archerTargets.push(target);
+}
+
 function animate(){
-requestAnimationFrame(animate);const t=performance.now()*.001;royalInfantry.forEach((unit,i)=>{const march=Math.sin(t*2.2+unit.phase);unit.root.position.y=Math.max(0,march)*.035;unit.arm.rotation.z=-.2+march*.12;unit.spear.rotation.z=-.08+Math.sin(t*1.1+unit.phase)*.025});steedLegs.forEach((leg,i)=>{const stride=t*3.1+(i%2)*Math.PI+(i<2?0:Math.PI);leg.rotation.x=Math.sin(stride)*.2});steedTail.rotation.x=Math.sin(t*1.7)*.16;steedHead.rotation.z=-.22+Math.sin(t*2.4)*.045;const battleBeat=(t%7.5);const strike=battleBeat>3.2&&battleBeat<4.05?Math.sin((battleBeat-3.2)/.85*Math.PI):0;mountedBlade.rotation.z=-.35+Math.sin(t*2.1)*.12-strike*1.05;mountedRider.rotation.z=Math.sin(t*3.1)*.025+strike*.08;mountedRider.position.y=.12+Math.abs(Math.sin(t*3.1))*.035;heroModel.position.y=.04+Math.sin(t*1.8)*.035;heroSword.rotation.z=-.22+Math.sin(t*1.8)*.045;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
+requestAnimationFrame(animate);const t=performance.now()*.001;royalArchers.forEach((unit,i)=>{const phase=(t+unit.phase)%3.8;const draw=phase>1.1&&phase<2.05?Math.sin((phase-1.1)/.95*Math.PI):0;unit.bow.rotation.z=-.12-draw*.38;unit.arrow.visible=phase>2.05&&phase<2.48;unit.arrow.position.z=.42-(phase>2.05&&phase<2.48?(phase-2.05)*2.1:0)});royalInfantry.forEach((unit,i)=>{const march=Math.sin(t*2.2+unit.phase);unit.root.position.y=Math.max(0,march)*.035;unit.arm.rotation.z=-.2+march*.12;unit.spear.rotation.z=-.08+Math.sin(t*1.1+unit.phase)*.025});steedLegs.forEach((leg,i)=>{const stride=t*3.1+(i%2)*Math.PI+(i<2?0:Math.PI);leg.rotation.x=Math.sin(stride)*.2});steedTail.rotation.x=Math.sin(t*1.7)*.16;steedHead.rotation.z=-.22+Math.sin(t*2.4)*.045;const battleBeat=(t%7.5);const strike=battleBeat>3.2&&battleBeat<4.05?Math.sin((battleBeat-3.2)/.85*Math.PI):0;mountedBlade.rotation.z=-.35+Math.sin(t*2.1)*.12-strike*1.05;mountedRider.rotation.z=Math.sin(t*3.1)*.025+strike*.08;mountedRider.position.y=.12+Math.abs(Math.sin(t*3.1))*.035;heroModel.position.y=.04+Math.sin(t*1.8)*.035;heroSword.rotation.z=-.22+Math.sin(t*1.8)*.045;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
 </body></html>
