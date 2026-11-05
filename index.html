@@ -210,6 +210,9 @@ applySurface(darkStone,47,3,3,.055);
 applySurface(wood,63,1.8,3,.025);
 applySurface(roof,79,2.8,2.8,.035);
 applySurface(roofBlue,97,2.8,2.8,.035);
+const roofTileMat=mat(0x8b5145,.82);
+applySurface(roofTileMat,149,4,5,.028);
+const roofTileGeometry=new THREE.BoxGeometry(.44,.065,.46);
 applySurface(earth,113,5,5,.025);
 applySurface(grass,131,7,7,.018);
 
@@ -434,6 +437,17 @@ function house(x,z,name,kind='house',scale=1){
   // Decorative gable fascia and roof-end beams
   for(const zSide of [-1,1]){
    box(g,0,h*scale+.43*scale,zSide*(d/2+.17)*scale,w*.92*scale,.12*scale,.13*scale,frameMat);
+  }
+  // Individually layered fired-clay roof tiles follow each roof slope.
+  // Shared geometry/material keep the added detail lightweight on mobile.
+  for(const side of [-1,1]){
+   const cx=side*half*.48,cy=h*scale+.67*scale,slope=side*.48;
+   for(let row=0;row<6;row++)for(let col=0;col<4;col++){
+    const lx=(col-1.5)*.49*scale,ly=.125*scale,lz=(row-2.5)*.47*scale;
+    const tile=new THREE.Mesh(roofTileGeometry,roofTileMat);
+    tile.position.set(cx+lx*Math.cos(slope)-ly*Math.sin(slope),cy+lx*Math.sin(slope)+ly*Math.cos(slope),lz);
+    tile.rotation.z=slope;tile.castShadow=true;tile.receiveShadow=true;g.add(tile);
+   }
   }
  }
  // Distinct entrance porch, lintel and door
