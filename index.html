@@ -187,14 +187,16 @@ function cylinder(parent,x,y,z,rt,rb,h,m,n=8){const o=new THREE.Mesh(new THREE.C
 function tree(x,z,s=1){const g=new THREE.Group();cylinder(g,0,0,0,.12,.18,1.1*s,wood,6);cone(g,0,.55*s,0,.8*s,1.5*s,mat(0x35533a),7);cone(g,0,1.25*s,0,.58*s,1.2*s,mat(0x476742),7);g.position.set(x,0,z);scene.add(g)}
 
 /* KENNEY CASTLE KIT — CC0 3D models, loaded as the visual foundation of the kingdom. */
-const kenneyCastleBase='https://hidencod.github.io/tge-assets/packs/castle-kit/';
+const kenneyAssetBase='https://hidencod.github.io/tge-assets/packs/';
 const kenneyGLTF=GLTFLoaderClass?new GLTFLoaderClass():null;
 const kenneyAssetCache=new Map();
-async function getKenneyCastleModel(file){
+async function getKenneyAsset(pack,file){
  if(!kenneyGLTF)return null;
- if(!kenneyAssetCache.has(file))kenneyAssetCache.set(file,kenneyGLTF.loadAsync(kenneyCastleBase+file).then(g=>g.scene).catch(e=>{console.warn('3D asset unavailable:',file,e);return null}));
- return kenneyAssetCache.get(file);
+ const key=pack+'/'+file;
+ if(!kenneyAssetCache.has(key))kenneyAssetCache.set(key,kenneyGLTF.loadAsync(kenneyAssetBase+key).then(g=>g.scene).catch(e=>{console.warn('3D asset unavailable:',key,e);return null}));
+ return kenneyAssetCache.get(key);
 }
+async function getKenneyCastleModel(file){return getKenneyAsset('castle-kit',file)}
 function placeKenneyCastleModel(source,x,y,z,w,h,d,rotation=0){
  if(!source)return null;
  const model=source.clone(true);
@@ -210,10 +212,14 @@ function placeKenneyCastleModel(source,x,y,z,w,h,d,rotation=0){
 }
 async function loadKingdomTemplateAssets(){
  if(!kenneyGLTF)return;
- const [wall,tower,bridge,catapult,treeModel]=await Promise.all([
+ const [wall,tower,bridge,catapult,treeModel,barrel,crate,chest,cartFence,wheat,crop,oak]=await Promise.all([
   getKenneyCastleModel('wall.glb'),getKenneyCastleModel('tower-square.glb'),
   getKenneyCastleModel('bridge-draw.glb'),getKenneyCastleModel('siege-catapult.glb'),
-  getKenneyCastleModel('tree-large.glb')
+  getKenneyCastleModel('tree-large.glb'),
+  getKenneyAsset('mini-dungeon','barrel.glb'),getKenneyAsset('mini-dungeon','chest.glb'),
+  getKenneyAsset('mini-dungeon','crate.glb'),getKenneyAsset('nature-kit','fence-planks.glb'),
+  getKenneyAsset('nature-kit','crops-wheatstageb.glb'),getKenneyAsset('nature-kit','crop-pumpkin.glb'),
+  getKenneyAsset('nature-kit','tree-oak.glb')
  ]);
  // Modular castle wall ring, aligned to the existing playable city footprint.
  for(let x=-14;x<=14;x+=4){
@@ -224,15 +230,29 @@ async function loadKingdomTemplateAssets(){
   placeKenneyCastleModel(wall,-16,0,z,4.05,3.15,1.05,-Math.PI/2);
   placeKenneyCastleModel(wall,16,0,z,4.05,3.15,1.05,Math.PI/2);
  }
- // Real modular towers replace the simple cylinder silhouettes at the four corners.
  for(const [x,z] of [[-16,-14],[16,-14],[-16,14],[16,14]])
   placeKenneyCastleModel(tower,x,0,z,3.9,6.2,3.9);
- // A working-looking drawbridge, siege engine and forest props complete the ready-made kit scene.
  placeKenneyCastleModel(bridge,0,-.05,16.1,4.5,1.8,4.2);
  placeKenneyCastleModel(catapult,-7,0,10.8,3.1,2.8,3.1,-.35);
  for(const [x,z,sc] of [[-18,-7,3.1],[18,-7,3.1],[-18,7,2.8],[18,7,2.8],[-11,-15,2.5],[11,-15,2.5]])
   placeKenneyCastleModel(treeModel,x,0,z,sc,sc*1.35,sc);
- window.__kingdomTemplateAssets={source:'Kenney Castle Kit',license:'CC0-1.0',loaded:true};
+ // Ready-made CC0 settlement props: stacked market goods, field crops and a fenced farmyard.
+ for(const [x,z] of [[11.7,2.4],[12.8,2.5],[13.2,3.6],[-12.2,-3.8],[-13.2,-2.4]]){
+  placeKenneyCastleModel(crate,x,0,z,.9,.9,.9);
+ }
+ for(const [x,z] of [[11.2,3.5],[12.2,3.7],[13.1,2.2]]){
+  placeKenneyCastleModel(barrel,x,0,z,.72,.9,.72);
+ }
+ placeKenneyCastleModel(chest,14.1,0,3.8,1,.8,.8);
+ for(const [x,z] of [[10,-10],[11.4,-10],[12.8,-10],[10,-11.2],[11.4,-11.2],[12.8,-11.2]]){
+  placeKenneyCastleModel(wheat,x,0,z,1.05,1.35,1.05);
+ }
+ for(const [x,z] of [[9.8,-12.4],[12.5,-12.4]])placeKenneyCastleModel(crop,x,0,z,.9,.8,.9);
+ for(const [x,z,rot] of [[8.7,-13.2,0],[14,-13.2,0],[8.7,-9.4,Math.PI/2],[14,-9.4,Math.PI/2]])
+  placeKenneyCastleModel(cartFence,x,0,z,3.3,1.2,.35,rot);
+ for(const [x,z] of [[-19,-10,3.4],[19,-10,3.4],[-19,10,3],[19,10,3]])
+  placeKenneyCastleModel(oak,x,0,z,2.8,3.7,2.8);
+ window.__kingdomTemplateAssets={source:'Kenney Castle, Mini Dungeon and Nature kits',license:'CC0-1.0',loaded:true,props:17};
 }
 
 // broad landscaped island
