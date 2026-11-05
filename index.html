@@ -369,7 +369,7 @@ for(const b of buildings){
   // Stable: horse stalls, roof ridge and hay bales
   for(let x=-1;x<=1;x+=2){
    box(stableBuilding,x*.82,.82,1.42,.1,1.55,.13,signatureMat.darkWood);
-   const bale=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.5,8),cropGold);
+   const bale=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.5,8),signatureMat.brightGold);
    bale.rotation.z=Math.PI/2;bale.position.set(x*.78,.35,-1.35);stableBuilding.add(bale);
   }
   const stableSign=new THREE.Mesh(new THREE.BoxGeometry(.95,.52,.12),signatureMat.red);
