@@ -318,6 +318,70 @@ for(const b of buildings){
  sign.position.set(1.42,1.75,1.34);sign.castShadow=true;b.add(sign);
  for(const x of [1.05,1.78])cylinder(b,x,1.45,1.34,.035,.04,.62,frame,5);
 }
+
+ // KINGDOM BUILDING SIGNATURES: distinct silhouettes and readable landmark props
+ const signatureMat={
+  red:mat(0x8e3e32),blue:mat(0x29495a),brightGold:mat(0xd7b05e),
+  darkWood:mat(0x38271d),canvas:mat(0xc8b17f),ember:new THREE.MeshStandardMaterial({color:0xff8a32,emissive:0xd64a12,emissiveIntensity:1.25})
+ };
+ const forgeEmbers=[];
+ const forgeBuilding=buildings.find(b=>b.userData.kind==='forge');
+ if(forgeBuilding){
+  // Forge: raised stone chimney, glowing furnace mouth and anvil
+  box(forgeBuilding,.9,2.45,-.65,.62,1.55,.66,darkStone);
+  box(forgeBuilding,.9,3.25,-.65,.78,.18,.8,stone);
+  const furnace=new THREE.Mesh(new THREE.BoxGeometry(.62,.72,.12),signatureMat.ember);
+  furnace.position.set(-.25,.62,1.38);forgeBuilding.add(furnace);
+  box(forgeBuilding,-1.05,.48,.15,.72,.2,.55,darkStone);
+  const anvil=new THREE.Mesh(new THREE.CylinderGeometry(.23,.3,.22,6),signatureMat.brightGold);
+  anvil.position.set(-1.05,.7,.15);forgeBuilding.add(anvil);
+  for(let i=0;i<3;i++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.19+i*.045,8,7),mat(0x77756d));puff.position.set(.9,4.05+i*.35,-.65);puff.material.transparent=true;puff.material.opacity=.34;forgeBuilding.add(puff);forgeEmbers.push(puff)}
+ }
+ const barracksBuilding=buildings.find(b=>b.userData.kind==='barracks');
+ if(barracksBuilding){
+  // Barracks: crenellated corner watch turrets and crossed weapon rack
+  for(const x of [-1.32,1.32]){
+   cylinder(barracksBuilding,x,2.05,-.92,.32,.38,.75,stone,8);
+   cone(barracksBuilding,x,2.78,-.92,.43,.62,signatureMat.red,6);
+   for(let k=-1;k<=1;k++)box(barracksBuilding,x+k*.19,2.78,-.92,.1,.2,.42,stone);
+  }
+  const rack=new THREE.Group();rack.position.set(-.95,.55,1.58);barracksBuilding.add(rack);
+  for(let j=0;j<2;j++){const blade=new THREE.Mesh(new THREE.BoxGeometry(.09,1.12,.07),signatureMat.blue);blade.position.set(j*.42,.42,0);blade.rotation.z=j?-.48:.48;rack.add(blade)}
+  box(rack,.2,.08,0,1.0,.13,.16,signatureMat.brightGold);
+ }
+ const stableBuilding=buildings.find(b=>b.userData.kind==='stable');
+ if(stableBuilding){
+  // Stable: horse stalls, roof ridge and hay bales
+  for(let x=-1;x<=1;x+=2){
+   box(stableBuilding,x*.82,.82,1.42,.1,1.55,.13,signatureMat.darkWood);
+   const bale=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.5,8),cropGold);
+   bale.rotation.z=Math.PI/2;bale.position.set(x*.78,.35,-1.35);stableBuilding.add(bale);
+  }
+  const stableSign=new THREE.Mesh(new THREE.BoxGeometry(.95,.52,.12),signatureMat.red);
+  stableSign.position.set(0,2.2,1.45);stableBuilding.add(stableSign);
+ }
+ const marketBuilding=buildings.find(b=>b.userData.kind==='market');
+ if(marketBuilding){
+  // Market: striped awning and open timber stall
+  for(let stripe=0;stripe<5;stripe++){
+   const awning=new THREE.Mesh(new THREE.BoxGeometry(.55,.12,1.0),mat(stripe%2?0xb7a16f:0x8b3e32));
+   awning.position.set(-1.08+stripe*.54,2.28,1.55);awning.rotation.x=-.12;marketBuilding.add(awning);
+  }
+  for(let x of [-1.25,1.25])box(marketBuilding,x,.55,1.58,.12,1.25,.12,signatureMat.darkWood);
+  for(let i=0;i<4;i++){const goods=new THREE.Mesh(new THREE.SphereGeometry(.15,8,7),mat([0x9d573b,0x78904b,0xd0ae59,0x6c8290][i]));goods.position.set(-.72+i*.48,.5,1.72);marketBuilding.add(goods)}
+ }
+ const templeBuilding=buildings.find(b=>b.userData.kind==='temple');
+ if(templeBuilding){
+  // Temple: ceremonial front steps, paired columns and a gilded crest
+  for(let x of [-1.02,1.02]){
+   cylinder(templeBuilding,x,.05,1.48,.16,.2,1.95,stone,10);
+   cylinder(templeBuilding,x,1.98,1.48,.22,.22,.12,signatureMat.brightGold,10);
+  }
+  box(templeBuilding,0,2.95,1.45,2.55,.2,.35,signatureMat.brightGold);
+  cone(templeBuilding,0,3.12,1.48,.38,.58,signatureMat.brightGold,4);
+ }
+ window.__kingdomLandmarks={forgeEmbers,buildings};
+
 // farm plots and water well
 for(let i=0;i<4;i++){box(scene,11+i*.8,-.02,-11, .55,.12,2.7,mat(i%2?0x8d9a50:0xb39a5c))}
 cylinder(scene,-13,0,0,.8,.8,.35,stone,8);cylinder(scene,-13,.35,0,.5,.5,.2,water,12);box(scene,-13,1.1,0,.12,1.4,.12,wood);
@@ -1736,7 +1800,7 @@ for(let i=0;i<3;i++){
 }
 
 function animate(){
-requestAnimationFrame(animate);const t=performance.now()*.001;royalVolley.forEach((shot,i)=>{const phase=(t+shot.phase)%4.2;const flying=phase>2.35&&phase<3.12;shot.mesh.visible=flying;if(flying){const progress=(phase-2.35)/.77;shot.mesh.position.set(shot.x,1.48+Math.sin(progress*Math.PI)*.24,8.55-progress*3.55);shot.mesh.rotation.set(0,0,0)}});royalArchers.forEach((unit,i)=>{const phase=(t+unit.phase)%3.8;const draw=phase>1.1&&phase<2.05?Math.sin((phase-1.1)/.95*Math.PI):0;unit.bow.rotation.z=-.12-draw*.38;unit.arrow.visible=phase>2.05&&phase<2.48;unit.arrow.position.z=.42-(phase>2.05&&phase<2.48?(phase-2.05)*2.1:0)});royalInfantry.forEach((unit,i)=>{const march=Math.sin(t*2.2+unit.phase);unit.root.position.y=Math.max(0,march)*.035;unit.arm.rotation.z=-.2+march*.12;unit.spear.rotation.z=-.08+Math.sin(t*1.1+unit.phase)*.025});steedLegs.forEach((leg,i)=>{const stride=t*3.1+(i%2)*Math.PI+(i<2?0:Math.PI);leg.rotation.x=Math.sin(stride)*.2});steedTail.rotation.x=Math.sin(t*1.7)*.16;steedHead.rotation.z=-.22+Math.sin(t*2.4)*.045;const battleBeat=(t%7.5);const strike=battleBeat>3.2&&battleBeat<4.05?Math.sin((battleBeat-3.2)/.85*Math.PI):0;mountedBlade.rotation.z=-.35+Math.sin(t*2.1)*.12-strike*1.05;mountedRider.rotation.z=Math.sin(t*3.1)*.025+strike*.08;mountedRider.position.y=.12+Math.abs(Math.sin(t*3.1))*.035;heroModel.position.y=.04+Math.sin(t*1.8)*.035;heroSword.rotation.z=-.22+Math.sin(t*1.8)*.045;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
+requestAnimationFrame(animate);const t=performance.now()*.001;forgeEmbers.forEach((p,i)=>{p.position.y=4.05+i*.35+Math.sin(t*1.8+i)*.12;p.material.opacity=.2+Math.sin(t*2+i)*.08});royalVolley.forEach((shot,i)=>{const phase=(t+shot.phase)%4.2;const flying=phase>2.35&&phase<3.12;shot.mesh.visible=flying;if(flying){const progress=(phase-2.35)/.77;shot.mesh.position.set(shot.x,1.48+Math.sin(progress*Math.PI)*.24,8.55-progress*3.55);shot.mesh.rotation.set(0,0,0)}});royalArchers.forEach((unit,i)=>{const phase=(t+unit.phase)%3.8;const draw=phase>1.1&&phase<2.05?Math.sin((phase-1.1)/.95*Math.PI):0;unit.bow.rotation.z=-.12-draw*.38;unit.arrow.visible=phase>2.05&&phase<2.48;unit.arrow.position.z=.42-(phase>2.05&&phase<2.48?(phase-2.05)*2.1:0)});royalInfantry.forEach((unit,i)=>{const march=Math.sin(t*2.2+unit.phase);unit.root.position.y=Math.max(0,march)*.035;unit.arm.rotation.z=-.2+march*.12;unit.spear.rotation.z=-.08+Math.sin(t*1.1+unit.phase)*.025});steedLegs.forEach((leg,i)=>{const stride=t*3.1+(i%2)*Math.PI+(i<2?0:Math.PI);leg.rotation.x=Math.sin(stride)*.2});steedTail.rotation.x=Math.sin(t*1.7)*.16;steedHead.rotation.z=-.22+Math.sin(t*2.4)*.045;const battleBeat=(t%7.5);const strike=battleBeat>3.2&&battleBeat<4.05?Math.sin((battleBeat-3.2)/.85*Math.PI):0;mountedBlade.rotation.z=-.35+Math.sin(t*2.1)*.12-strike*1.05;mountedRider.rotation.z=Math.sin(t*3.1)*.025+strike*.08;mountedRider.position.y=.12+Math.abs(Math.sin(t*3.1))*.035;heroModel.position.y=.04+Math.sin(t*1.8)*.035;heroSword.rotation.z=-.22+Math.sin(t*1.8)*.045;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
 </body></html>
