@@ -1604,8 +1604,42 @@ mountedRider.position.set(-.12,.12,0);royalSteed.add(mountedRider);
 royalSteed.position.set(.9,0,7.5);royalSteed.rotation.y=-Math.PI/2;scene.add(royalSteed);
 window.__royalSteed={root:royalSteed,legs:steedLegs,blade:mountedBlade,tail:steedTail};
 
+ 
+// ROYAL INFANTRY FORMATION: six shield-bearers protecting the command plaza
+const royalInfantry=[];
+const infantryArmorMat=mat(0x46535b),infantryClothMat=mat(0x8a3b32),infantryShieldMat=mat(0x254765);
+const infantryGoldMat=mat(0xc5a05a),infantryWoodMat=mat(0x503522);
+for(let soldierIndex=0;soldierIndex<6;soldierIndex++){
+ const soldier=new THREE.Group();
+ const row=soldierIndex<3?0:1,col=soldierIndex%3;
+ const sx=-9.1+col*1.35+(row?.28:0),sz=8.8+row*1.35;
+ heroPart(soldier,new THREE.CylinderGeometry(.22,.29,.72,8),infantryArmorMat,0,1.0,0);
+ heroPart(soldier,new THREE.CylinderGeometry(.28,.32,.22,8),infantryClothMat,0,.55,0);
+ heroPart(soldier,new THREE.SphereGeometry(.18,10,8),heroSkin,0,1.53,.015);
+ heroPart(soldier,new THREE.ConeGeometry(.23,.32,7),heroSteel,0,1.76,0);
+ heroPart(soldier,new THREE.BoxGeometry(.48,.09,.34),infantryGoldMat,0,1.62,.015);
+ for(const legX of [-.14,.14]){
+  heroPart(soldier,new THREE.CylinderGeometry(.075,.09,.48,7),infantryArmorMat,legX,.25,0);
+  heroPart(soldier,new THREE.BoxGeometry(.16,.12,.25),infantryWoodMat,legX,.055,.07);
+ }
+ const shieldGroup=new THREE.Group();
+ heroPart(shieldGroup,new THREE.CylinderGeometry(.28,.25,.1,6),infantryShieldMat,0,0,0,1,1,.58);
+ heroPart(shieldGroup,new THREE.SphereGeometry(.09,8,7),infantryGoldMat,0,0,.065);
+ shieldGroup.position.set(-.34,1.0,.16);soldier.add(shieldGroup);
+ const spearGroup=new THREE.Group();
+ heroPart(spearGroup,new THREE.CylinderGeometry(.025,.03,1.55,6),infantryWoodMat,0,.72,0);
+ heroPart(spearGroup,new THREE.ConeGeometry(.085,.28,6),heroSteel,0,1.62,0);
+ spearGroup.position.set(.36,.55,-.02);spearGroup.rotation.z=-.08;soldier.add(spearGroup);
+ const armPivot=new THREE.Group();armPivot.position.set(.25,1.28,0);
+ heroPart(armPivot,new THREE.CylinderGeometry(.075,.09,.48,7),infantryArmorMat,0,-.22,0);
+ armPivot.rotation.z=-.2;soldier.add(armPivot);
+ soldier.position.set(sx,0,sz);soldier.rotation.y=.08;scene.add(soldier);
+ royalInfantry.push({root:soldier,arm:armPivot,spear:spearGroup,phase:soldierIndex*.7});
+}
+window.__royalInfantry=royalInfantry;
+
 function animate(){
-requestAnimationFrame(animate);const t=performance.now()*.001;steedLegs.forEach((leg,i)=>{const stride=t*3.1+(i%2)*Math.PI+(i<2?0:Math.PI);leg.rotation.x=Math.sin(stride)*.2});steedTail.rotation.x=Math.sin(t*1.7)*.16;steedHead.rotation.z=-.22+Math.sin(t*2.4)*.045;const battleBeat=(t%7.5);const strike=battleBeat>3.2&&battleBeat<4.05?Math.sin((battleBeat-3.2)/.85*Math.PI):0;mountedBlade.rotation.z=-.35+Math.sin(t*2.1)*.12-strike*1.05;mountedRider.rotation.z=Math.sin(t*3.1)*.025+strike*.08;mountedRider.position.y=.12+Math.abs(Math.sin(t*3.1))*.035;heroModel.position.y=.04+Math.sin(t*1.8)*.035;heroSword.rotation.z=-.22+Math.sin(t*1.8)*.045;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
+requestAnimationFrame(animate);const t=performance.now()*.001;royalInfantry.forEach((unit,i)=>{const march=Math.sin(t*2.2+unit.phase);unit.root.position.y=Math.max(0,march)*.035;unit.arm.rotation.z=-.2+march*.12;unit.spear.rotation.z=-.08+Math.sin(t*1.1+unit.phase)*.025});steedLegs.forEach((leg,i)=>{const stride=t*3.1+(i%2)*Math.PI+(i<2?0:Math.PI);leg.rotation.x=Math.sin(stride)*.2});steedTail.rotation.x=Math.sin(t*1.7)*.16;steedHead.rotation.z=-.22+Math.sin(t*2.4)*.045;const battleBeat=(t%7.5);const strike=battleBeat>3.2&&battleBeat<4.05?Math.sin((battleBeat-3.2)/.85*Math.PI):0;mountedBlade.rotation.z=-.35+Math.sin(t*2.1)*.12-strike*1.05;mountedRider.rotation.z=Math.sin(t*3.1)*.025+strike*.08;mountedRider.position.y=.12+Math.abs(Math.sin(t*3.1))*.035;heroModel.position.y=.04+Math.sin(t*1.8)*.035;heroSword.rotation.z=-.22+Math.sin(t*1.8)*.045;sheepFlock.forEach((s,i)=>{const q=t*.22+s.userData.phase;s.position.x=s.userData.homeX+Math.sin(q)*.18;s.position.z=s.userData.homeZ+Math.cos(q*.8)*.12;s.rotation.y=Math.atan2(Math.cos(q)*.18,-Math.sin(q*.8)*.1);s.userData.head.position.y=.66+Math.sin(t*1.8+i)*.035});farmFlock.forEach((b,i)=>{const q=t*.55+b.userData.phase;b.position.x=b.userData.homeX+Math.sin(q)*.42;b.position.z=b.userData.homeZ+Math.cos(q*.8)*.3;b.rotation.y=Math.atan2(Math.cos(q)*.42,-Math.sin(q*.8)*.24);b.children[1].rotation.x=Math.sin(q*2.4)*.28});marketCart.position.x=9.8+Math.sin(t*.42)*1.15;marketCart.position.z=-7.5+Math.cos(t*.42)*.38;marketCart.rotation.y=Math.cos(t*.42)*.1;marketCart.userData.wheels.forEach(w=>w.rotation.x=t*1.7);(window.__mountedPatrols||[]).forEach(p=>{const q=t*.22+p.userData.phase;p.position.x= Math.cos(q)*9;p.position.z=Math.sin(q)*7;p.rotation.y=-q+Math.PI/2;p.children.forEach((c,i)=>{if(i>=4&&i<=7)c.rotation.z=Math.sin(q*5)*.12})});(window.__royalGuards||[]).forEach((g,i)=>{g.children[3].rotation.z=Math.sin(t*1.8+i)*.025});(window.__cityWalkers||[]).forEach(p=>{const q=t*.32+p.userData.phase;p.position.x=p.userData.homeX+Math.sin(q)*p.userData.routeX;p.position.z=p.userData.homeZ+Math.cos(q*.8)*p.userData.routeZ;p.rotation.y=Math.atan2(Math.cos(q)*p.userData.routeX,-Math.sin(q*.8)*p.userData.routeZ);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.18)});townsfolk.forEach(p=>{const q=t*.34+p.userData.phase;p.position.x=p.userData.originX+Math.sin(q)*.72;p.position.z=p.userData.originZ+Math.cos(q*.8)*.48;p.rotation.y=Math.atan2(Math.cos(q)*.72,-Math.sin(q*.8)*.38);p.userData.arms.forEach((a,i)=>a.rotation.z=(i===0?1:-1)*Math.sin(q*5)*.16)});smokePuffs.forEach(p=>{p.position.y=p.userData.baseY+Math.sin(t*1.1+p.userData.phase)*.18;p.position.x+=Math.sin(t*.7+p.userData.phase)*.0008;p.material.opacity=.12+((Math.sin(t+p.userData.phase)+1)*.07)});forgeGlow.intensity=.8+Math.sin(t*5)*.25;camera.position.set(Math.sin(rot)*cameraDistance,22+tilt*20,Math.cos(rot)*cameraDistance);camera.lookAt(0,1,0);renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script>
 </body></html>
