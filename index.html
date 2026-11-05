@@ -168,6 +168,9 @@
 let THREE;
 try { THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'); }
 catch(firstError) { THREE=await import('https://unpkg.com/three@0.160.0/build/three.module.js'); }
+let GLTFLoaderClass=null;
+try { const gltfModule=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js'); GLTFLoaderClass=gltfModule.GLTFLoader; }
+catch(loaderError) { console.warn('Kenney 3D kit loader unavailable; procedural fallback remains active.',loaderError); }
 const host=document.querySelector('#scene');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9eb3b4);scene.fog=new THREE.Fog(0x9eb3b4,38,90);
 const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,180);camera.position.set(19,22,26);camera.lookAt(0,1,0);
@@ -181,6 +184,56 @@ function box(parent,x,y,z,w,h,d,m){const o=new THREE.Mesh(new THREE.BoxGeometry(
 function cone(parent,x,y,z,r,h,m,n=4){const o=new THREE.Mesh(new THREE.ConeGeometry(r,h,n),m);o.position.set(x,y+h/2,z);o.castShadow=true;parent.add(o);return o}
 function cylinder(parent,x,y,z,rt,rb,h,m,n=8){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,n),m);o.position.set(x,y+h/2,z);o.castShadow=true;parent.add(o);return o}
 function tree(x,z,s=1){const g=new THREE.Group();cylinder(g,0,0,0,.12,.18,1.1*s,wood,6);cone(g,0,.55*s,0,.8*s,1.5*s,mat(0x35533a),7);cone(g,0,1.25*s,0,.58*s,1.2*s,mat(0x476742),7);g.position.set(x,0,z);scene.add(g)}
+
+/* KENNEY CASTLE KIT — CC0 3D models, loaded as the visual foundation of the kingdom. */
+const kenneyCastleBase='https://hidencod.github.io/tge-assets/packs/castle-kit/';
+const kenneyGLTF=GLTFLoaderClass?new GLTFLoaderClass():null;
+const kenneyAssetCache=new Map();
+async function getKenneyCastleModel(file){
+ if(!kenneyGLTF)return null;
+ if(!kenneyAssetCache.has(file))kenneyAssetCache.set(file,kenneyGLTF.loadAsync(kenneyCastleBase+file).then(g=>g.scene).catch(e=>{console.warn('3D asset unavailable:',file,e);return null}));
+ return kenneyAssetCache.get(file);
+}
+function placeKenneyCastleModel(source,x,y,z,w,h,d,rotation=0){
+ if(!source)return null;
+ const model=source.clone(true);
+ const rawBox=new THREE.Box3().setFromObject(model),rawSize=rawBox.getSize(new THREE.Vector3());
+ if(rawSize.x<.001||rawSize.y<.001||rawSize.z<.001)return null;
+ model.scale.set(w/rawSize.x,h/rawSize.y,d/rawSize.z);
+ model.updateMatrixWorld(true);
+ const fitted=new THREE.Box3().setFromObject(model),center=fitted.getCenter(new THREE.Vector3());
+ model.position.x-=center.x;model.position.y-=fitted.min.y;model.position.z-=center.z;
+ model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ const holder=new THREE.Group();holder.add(model);holder.position.set(x,y,z);holder.rotation.y=rotation;scene.add(holder);
+ return holder;
+}
+async function loadKingdomTemplateAssets(){
+ if(!kenneyGLTF)return;
+ const [wall,tower,bridge,catapult,treeModel]=await Promise.all([
+  getKenneyCastleModel('wall.glb'),getKenneyCastleModel('tower-square.glb'),
+  getKenneyCastleModel('bridge-draw.glb'),getKenneyCastleModel('siege-catapult.glb'),
+  getKenneyCastleModel('tree-large.glb')
+ ]);
+ // Modular castle wall ring, aligned to the existing playable city footprint.
+ for(let x=-14;x<=14;x+=4){
+  placeKenneyCastleModel(wall,x,0,-14,4.05,3.15,1.05);
+  if(Math.abs(x)>2.1)placeKenneyCastleModel(wall,x,0,14,4.05,3.15,1.05,Math.PI);
+ }
+ for(let z=-10;z<=10;z+=4){
+  placeKenneyCastleModel(wall,-16,0,z,4.05,3.15,1.05,-Math.PI/2);
+  placeKenneyCastleModel(wall,16,0,z,4.05,3.15,1.05,Math.PI/2);
+ }
+ // Real modular towers replace the simple cylinder silhouettes at the four corners.
+ for(const [x,z] of [[-16,-14],[16,-14],[-16,14],[16,14]])
+  placeKenneyCastleModel(tower,x,0,z,3.9,6.2,3.9);
+ // A working-looking drawbridge, siege engine and forest props complete the ready-made kit scene.
+ placeKenneyCastleModel(bridge,0,-.05,16.1,4.5,1.8,4.2);
+ placeKenneyCastleModel(catapult,-7,0,10.8,3.1,2.8,3.1,-.35);
+ for(const [x,z,sc] of [[-18,-7,3.1],[18,-7,3.1],[-18,7,2.8],[18,7,2.8],[-11,-15,2.5],[11,-15,2.5]])
+  placeKenneyCastleModel(treeModel,x,0,z,sc,sc*1.35,sc);
+ window.__kingdomTemplateAssets={source:'Kenney Castle Kit',license:'CC0-1.0',loaded:true};
+}
+
 // broad landscaped island
 box(scene,0,-.65,0,40,.8,34,grass);
 const edge=new THREE.Mesh(new THREE.BoxGeometry(42,.7,36),earth);edge.position.y=-1.25;scene.add(edge);
@@ -282,6 +335,7 @@ for(const [sx,sz] of [[-2.5,-2],[2.5,-2],[-2.5,2],[2.5,2]]){
   castle.add(standard);keepStandards.push({standard,cloth,phase:keepStandards.length*.9});
 }
 
+loadKingdomTemplateAssets().catch(e=>console.warn('Kingdom 3D template fallback:',e));
 // individual city buildings with separate silhouettes
 function house(x,z,name,kind='house',scale=1){const g=new THREE.Group();const w=kind==='hall'?3.8:2.7,d=kind==='hall'?3.1:2.5,h=kind==='stable'?1.8:2.2;
 box(g,0,0,0,w*scale,h*scale,d*scale,kind==='barracks'?stone:wood);
