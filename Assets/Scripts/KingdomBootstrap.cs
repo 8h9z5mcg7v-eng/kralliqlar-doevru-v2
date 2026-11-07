@@ -82,6 +82,7 @@ public sealed class KingdomBootstrap : MonoBehaviour
         Details();
         CameraSetup();
         LoadProgress();
+        LoadProgress();
     }
     void Lighting()
     {
@@ -213,6 +214,43 @@ public sealed class KingdomBootstrap : MonoBehaviour
         if(Input.GetMouseButtonUp(0)){if(dragging && ((Vector2)Input.mousePosition-last).magnitude<8f) SelectAt(Input.mousePosition);dragging=false;}
         if(Mathf.Abs(Input.mouseScrollDelta.y)>.01f){distance=Mathf.Clamp(distance-Input.mouseScrollDelta.y*2,20,56);UpdateCamera();}
     }
+    void SelectAt(Vector2 point)
+    {
+        if (!cam) return;
+        Ray ray = cam.ScreenPointToRay(point);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, 160f))
+        {
+            string objectName = hit.collider.gameObject.name;
+            if (objectName.EndsWith(" selection collider"))
+            {
+                selectedBuilding = objectName.Replace(" selection collider", "");
+                if (!buildingLevels.ContainsKey(selectedBuilding))
+                    buildingLevels[selectedBuilding] = PlayerPrefs.GetInt("lvl_" + selectedBuilding, 1);
+                panel = "";
+            }
+        }
+    }
+
+    void LoadProgress()
+    {
+        timber = PlayerPrefs.GetInt("timber", 1200);
+        stoneCount = PlayerPrefs.GetInt("stone", 900);
+        food = PlayerPrefs.GetInt("food", 1500);
+        coins = PlayerPrefs.GetInt("coins", 250);
+    }
+
+    void SaveProgress()
+    {
+        PlayerPrefs.SetInt("timber", timber);
+        PlayerPrefs.SetInt("stone", stoneCount);
+        PlayerPrefs.SetInt("food", food);
+        PlayerPrefs.SetInt("coins", coins);
+        foreach (var item in buildingLevels)
+            PlayerPrefs.SetInt("lvl_" + item.Key, item.Value);
+        PlayerPrefs.Save();
+    }
+
     void OnGUI()
     {
         GUI.skin.label.fontSize=Mathf.Max(13,Screen.width/48);
@@ -229,7 +267,15 @@ public sealed class KingdomBootstrap : MonoBehaviour
             if(nav[i]=="İTTİFAQ")panel="İttifaqlar — növbəti inkişaf mərhələsi";
         }
         GUI.Label(new Rect(12,68,Screen.width-24,28),"Şəhəri döndərmək üçün sürüşdür • yaxınlaşdırmaq üçün iki barmaq");
-        if(selectedBuilding!="") {\n            int lvl=buildingLevels.ContainsKey(selectedBuilding)?buildingLevels[selectedBuilding]:1;\n            GUI.Box(new Rect(12,Screen.height-154,Screen.width-24,84),selectedBuilding+"  •  SƏVİYYƏ "+lvl);\n            if(GUI.Button(new Rect(24,Screen.height-112,155,32),"İnkişaf et • 100 odun")) {\n                if(timber>=100){timber-=100;buildingLevels[selectedBuilding]=lvl+1;SaveProgress();}\n            }\n            if(GUI.Button(new Rect(Screen.width-92,Screen.height-148,72,30),"BAĞLA"))selectedBuilding="";\n        }\n        else if(panel!="") {
+        if(selectedBuilding!="") {
+            int lvl=buildingLevels.ContainsKey(selectedBuilding)?buildingLevels[selectedBuilding]:1;
+            GUI.Box(new Rect(12,Screen.height-154,Screen.width-24,84),selectedBuilding+"  •  SƏVİYYƏ "+lvl);
+            if(GUI.Button(new Rect(24,Screen.height-112,155,32),"İnkişaf et • 100 odun")) {
+                if(timber>=100){timber-=100;buildingLevels[selectedBuilding]=lvl+1;SaveProgress();}
+            }
+            if(GUI.Button(new Rect(Screen.width-92,Screen.height-148,72,30),"BAĞLA"))selectedBuilding="";
+        }
+        else if(panel!="") {
             GUI.Box(new Rect(12,Screen.height-154,Screen.width-24,84),panel);
             if(GUI.Button(new Rect(Screen.width-92,Screen.height-148,72,30),"BAĞLA"))panel="";
             if(panel=="QALA"&&GUI.Button(new Rect(24,Screen.height-112,160,32),"İnkişaf et • 100 odun")) {
