@@ -9,6 +9,7 @@ public sealed class KingdomBootstrap : MonoBehaviour
     Vector2 last;
     bool dragging;
     int timber = 1200, stoneCount = 900, food = 1500, coins = 250;
+    int infantry = 120, archers = 80, cavalry = 40;
     string panel = "";
     string selectedBuilding = "";
     readonly Dictionary<string, int> buildingLevels = new Dictionary<string, int>();
@@ -238,6 +239,9 @@ public sealed class KingdomBootstrap : MonoBehaviour
         stoneCount = PlayerPrefs.GetInt("stone", 900);
         food = PlayerPrefs.GetInt("food", 1500);
         coins = PlayerPrefs.GetInt("coins", 250);
+        infantry = PlayerPrefs.GetInt("infantry", 120);
+        archers = PlayerPrefs.GetInt("archers", 80);
+        cavalry = PlayerPrefs.GetInt("cavalry", 40);
     }
 
     void SaveProgress()
@@ -246,6 +250,9 @@ public sealed class KingdomBootstrap : MonoBehaviour
         PlayerPrefs.SetInt("stone", stoneCount);
         PlayerPrefs.SetInt("food", food);
         PlayerPrefs.SetInt("coins", coins);
+        PlayerPrefs.SetInt("infantry", infantry);
+        PlayerPrefs.SetInt("archers", archers);
+        PlayerPrefs.SetInt("cavalry", cavalry);
         foreach (var item in buildingLevels)
             PlayerPrefs.SetInt("lvl_" + item.Key, item.Value);
         PlayerPrefs.Save();
@@ -262,12 +269,12 @@ public sealed class KingdomBootstrap : MonoBehaviour
         float bw=(Screen.width-42)/4f;
         for(int i=0;i<nav.Length;i++) if(GUI.Button(new Rect(8+i*(bw+8),Screen.height-58,bw,48),nav[i])) {
             panel=nav[i];
-            if(nav[i]=="ORDU")panel="Qoşunlar: 120 piyada • 80 oxçu • 40 süvari";
+            if(nav[i]=="ORDU")panel="ORDU TƏLİMİ";
             if(nav[i]=="DÜNYA")panel="Dünya xəritəsi — növbəti inkişaf mərhələsi";
             if(nav[i]=="İTTİFAQ")panel="İttifaqlar — növbəti inkişaf mərhələsi";
         }
-        GUI.Label(new Rect(12,68,Screen.width-24,28),"Şəhəri döndərmək üçün sürüşdür • yaxınlaşdırmaq üçün iki barmaq");
-        if(selectedBuilding!="") {
+        GUI.Label(new Rect(12,68,Screen.width-24,28),"Şəhəri döndərmək üçün sürüşdür • yaxınlaşdırmaq üçün iki barmaq");\n        if(GUI.Button(new Rect(Screen.width-126,68,114,34),"RESURSLAR +")) { timber+=50;stoneCount+=35;food+=75;SaveProgress(); }
+        if(panel=="ORDU TƏLİMİ") {\n            GUI.Box(new Rect(12,Screen.height-190,Screen.width-24,120),"Piyada: "+infantry+"   Oxçu: "+archers+"   Süvari: "+cavalry);\n            if(GUI.Button(new Rect(20,Screen.height-145,Screen.width/3-20,36),"Piyada +10")) { if(food>=100&&timber>=30){food-=100;timber-=30;infantry+=10;SaveProgress();} }\n            if(GUI.Button(new Rect(Screen.width/3+5,Screen.height-145,Screen.width/3-15,36),"Oxçu +10")) { if(food>=100&&timber>=40){food-=100;timber-=40;archers+=10;SaveProgress();} }\n            if(GUI.Button(new Rect(Screen.width*2/3+3,Screen.height-145,Screen.width/3-15,36),"Süvari +5")) { if(food>=100&&coins>=20){food-=100;coins-=20;cavalry+=5;SaveProgress();} }\n            if(GUI.Button(new Rect(Screen.width-92,Screen.height-184,72,28),"BAĞLA"))panel="";\n        }\n        else if(selectedBuilding!="") {
             int lvl=buildingLevels.ContainsKey(selectedBuilding)?buildingLevels[selectedBuilding]:1;
             GUI.Box(new Rect(12,Screen.height-154,Screen.width-24,84),selectedBuilding+"  •  SƏVİYYƏ "+lvl);
             if(GUI.Button(new Rect(24,Screen.height-112,155,32),"İnkişaf et • 100 odun")) {
