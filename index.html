@@ -416,7 +416,18 @@ function house(x,z,name,kind='house',scale=1){
  const wallMat=mat(plasterByKind[kind]||0xb7a17d),frameMat=mat(0x493326),roofMat=kind==='hall'?roofBlue:(kind==='temple'?mat(0x777d83):(kind==='forge'?mat(0x51494a):roof));
  // Raised stone foundation and plaster-and-timber walls
  box(g,0,.16,0,(w+.34)*scale,.32*scale,(d+.34)*scale,darkStone);
- box(g,0,(h/2+.22)*scale,0,w*scale,h*scale,d*scale,wallMat);
+ // Gabled, beveled plaster shell: a true house silhouette instead of a plain cuboid.
+ const facadeShape=new THREE.Shape();
+ facadeShape.moveTo(-w*.5,0);
+ facadeShape.lineTo(w*.5,0);
+ facadeShape.lineTo(w*.5,h*.78);
+ facadeShape.lineTo(0,h*1.18);
+ facadeShape.lineTo(-w*.5,h*.78);
+ facadeShape.closePath();
+ const facadeGeo=new THREE.ExtrudeGeometry(facadeShape,{depth:d*scale,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.055*scale,bevelThickness:.055*scale,curveSegments:3});
+ const facade=new THREE.Mesh(facadeGeo,wallMat);
+ facade.position.set(0,.22*scale,-d*.5*scale);
+ facade.castShadow=true;facade.receiveShadow=true;g.add(facade);
  for(const side of [-1,1]){
   box(g,side*(w/2-.12)*scale,(h/2+.22)*scale,(d/2+.035)*scale,.16*scale,h*scale,.12*scale,frameMat);
   box(g,side*(w/2-.12)*scale,(h/2+.22)*scale,-(d/2+.035)*scale,.16*scale,h*scale,.12*scale,frameMat);
