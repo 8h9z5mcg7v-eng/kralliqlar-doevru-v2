@@ -173,8 +173,8 @@ let GLTFLoaderClass=null;
 try { const gltfModule=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js'); GLTFLoaderClass=gltfModule.GLTFLoader; }
 catch(loaderError) { console.warn('Kenney 3D kit loader unavailable; procedural fallback remains active.',loaderError); }
 const host=document.querySelector('#scene');
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x9eb3b4);scene.fog=new THREE.Fog(0x9eb3b4,38,90);
-const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,180);camera.position.set(19,22,26);camera.lookAt(0,1,0);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x9eb3b4);scene.fog=new THREE.Fog(0x9eb3b4,58,135);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,240);camera.position.set(25,29,35);camera.lookAt(0,1,0);
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;host.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xe4f0f2,0x586044,2));
 const sun=new THREE.DirectionalLight(0xffe1b0,3.2);sun.position.set(-18,28,14);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;scene.add(sun);
