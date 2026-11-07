@@ -25,6 +25,33 @@ public sealed class KingdomBootstrap : MonoBehaviour
         return g;
     }
     void Cube(string n, Vector3 p, Vector3 s, Material m) { Part(n, PrimitiveType.Cube, p, s, m); }
+    GameObject MakeCone(string n, Vector3 p, float radius, float height, Material mat)
+    {
+        const int sides = 12;
+        var vertices = new Vector3[sides + 1];
+        var triangles = new int[sides * 6];
+        vertices[0] = new Vector3(0, height, 0);
+        for (int i = 0; i < sides; i++)
+        {
+            float a = i * Mathf.PI * 2f / sides;
+            vertices[i + 1] = new Vector3(Mathf.Cos(a) * radius, 0, Mathf.Sin(a) * radius);
+            int t = i * 6;
+            int next = (i + 1) % sides + 1;
+            triangles[t] = 0; triangles[t + 1] = i + 1; triangles[t + 2] = next;
+            triangles[t + 3] = sides + 0; triangles[t + 4] = next; triangles[t + 5] = i + 1;
+        }
+        var mesh = new Mesh();
+        mesh.vertices = vertices;
+        var faces = new int[sides * 3];
+        for (int i = 0; i < sides; i++) { faces[i * 3] = 0; faces[i * 3 + 1] = i + 1; faces[i * 3 + 2] = (i + 1) % sides + 1; }
+        mesh.triangles = faces; mesh.RecalculateNormals();
+        var go = new GameObject(n);
+        go.transform.position = p;
+        go.AddComponent<MeshFilter>().sharedMesh = mesh;
+        go.AddComponent<MeshRenderer>().sharedMaterial = mat;
+        return go;
+    }
+
     void Start()
     {
         Application.targetFrameRate = 60;
@@ -70,7 +97,7 @@ public sealed class KingdomBootstrap : MonoBehaviour
     {
         Part("Round defensive tower",PrimitiveType.Cylinder,p+Vector3.up*h/2,new Vector3(2.1f,h,2.1f),stone);
         Part("Tower crown",PrimitiveType.Cylinder,p+Vector3.up*(h+.1f),new Vector3(2.35f,.28f,2.35f),paleStone);
-        Part("Tower roof",PrimitiveType.Cone,p+Vector3.up*(h+1),new Vector3(2.2f,1.8f,2.2f),roof);
+        MakeCone("Tower roof",p+Vector3.up*(h+1),1.1f,1.8f,roof);
         Cube("Tower arrow slit",p+new Vector3(0,h*.55f,-1.06f),new Vector3(.16f,.7f,.04f),roof);
         Cube("Tower gold band",p+Vector3.up*(h*.3f),new Vector3(2.15f,.12f,2.15f),gold);
     }
