@@ -1268,7 +1268,24 @@ for(const child of originalCityChildren){if(!child.isLight)child.visible=false;}
 } catch(cityBuildError) { console.error('City rebuild failed; keeping original city visible:',cityBuildError); const diagnostic=document.createElement('div'); diagnostic.textContent='Şəhər yenilənmə xətası: '+(cityBuildError?.message||cityBuildError); diagnostic.style.cssText='position:fixed;left:12px;right:12px;bottom:84px;z-index:99999;background:#5b211d;color:#fff;padding:12px;border:1px solid #e4a27b;border-radius:8px;font:13px sans-serif'; document.body.appendChild(diagnostic); }
 }
 // camera drag / zoom
-let down=false,px=0,py=0,rot=0,tilt=0,cameraDistance=49,dragged=false;renderer.domElement.addEventListener('pointerdown',e=>{down=true;dragged=false;px=e.clientX;py=e.clientY});window.addEventListener('pointerup',()=>down=false);window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;rot+=dx*.006;tilt=Math.max(-.25,Math.min(.35,tilt+dy*.003));px=e.clientX;py=e.clientY});renderer.domElement.addEventListener('wheel',e=>{cameraDistance=Math.max(30,Math.min(72,cameraDistance*(e.deltaY>0?1.07:.93)))});
+let down=false,px=0,py=0,rot=0,tilt=0,cameraDistance=49,dragged=false;
+const activePointers=new Map();let pinchStart=0,pinchCameraStart=49;
+renderer.domElement.style.touchAction='none';
+renderer.domElement.addEventListener('pointerdown',e=>{
+ activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(activePointers.size===1){down=true;px=e.clientX;py=e.clientY;dragged=false;}
+ if(activePointers.size===2){const pts=[...activePointers.values()];pinchStart=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);pinchCameraStart=cameraDistance;down=false;dragged=true;}
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(!activePointers.has(e.pointerId))return;
+ activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(activePointers.size>=2){const pts=[...activePointers.values()];const distance=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);if(pinchStart>0)cameraDistance=Math.max(30,Math.min(72,pinchCameraStart*pinchStart/Math.max(1,distance)));dragged=true;return;}
+ if(!down)return;const dx=e.clientX-px,dy=e.clientY-py;if(Math.abs(dx)+Math.abs(dy)>3)dragged=true;rot+=dx*.006;tilt=Math.max(-.25,Math.min(.35,tilt+dy*.003));px=e.clientX;py=e.clientY;
+});
+function releasePointer(e){activePointers.delete(e.pointerId);if(activePointers.size<2)pinchStart=0;if(activePointers.size===1){const p=[...activePointers.values()][0];px=p.x;py=p.y;down=true;}else down=false;}
+renderer.domElement.addEventListener('pointerup',releasePointer);
+renderer.domElement.addEventListener('pointercancel',releasePointer);
+renderer.domElement.addEventListener('wheel',e=>{cameraDistance=Math.max(30,Math.min(72,cameraDistance*(e.deltaY>0?1.07:.93)))},{passive:true});
 const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();renderer.domElement.addEventListener('click',e=>{if(dragged)return;mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(scene.children,true);let obj=null;for(const hit of hits){let node=hit.object;while(node&&node!==scene){if(node.userData?.name){obj=node;break}node=node.parent}if(obj)break;}if(!obj){let p=hits[0]?.point;if(p&&p.distanceTo(new THREE.Vector3(0,0,0))<5)obj={userData:{name:'Baş Qala',kind:'castle'}}}if(obj)showPanel(obj.userData.name,obj.userData.kind)});
 const SAVE='kd-city-save-v1';
 const game={wood:12500,stone:8200,iron:4600,gold:2100,food:3200,levels:{},infantry:60,archers:40,cavalry:20};
